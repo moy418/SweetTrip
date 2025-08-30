@@ -48,30 +48,33 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-400 text-white py-20">
-        <div className="container mx-auto px-4">
+      {/* Hero Section with Animation */}
+      <section className="relative bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-400 text-white py-20 overflow-hidden">
+        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 opacity-30 animate-pulse z-0">
+          <img src="/sweetlogo.jpeg" alt="Sweet Trip Logo" className="w-64 h-64 object-contain mx-auto" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight animate-fade-in-down">
               Discover Candy from
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300 animate-gradient-x">
                 Around the World
               </span>
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-blue-100">
+            <p className="text-xl md:text-2xl mb-8 text-blue-100 animate-fade-in-up">
               Explore exotic flavors and unique treats from every corner of the globe. From Japanese Kit Kats to Korean snacks, embark on a sweet journey with Sweet Trip.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-200">
               <Link
                 to="/featured"
-                className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2"
+                className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2 shadow-lg hover:scale-105 transform transition-transform duration-300"
               >
                 <span>Shop Featured Products</span>
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <Link
                 to="/categories"
-                className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-colors flex items-center justify-center space-x-2"
+                className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-colors flex items-center justify-center space-x-2 shadow-lg hover:scale-105 transform transition-transform duration-300"
               >
                 <Globe className="h-5 w-5" />
                 <span>Explore Categories</span>
@@ -79,15 +82,14 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-        
-        {/* Decorative Elements */}
-        <div className="absolute top-20 left-10 opacity-20">
-          <div className="w-32 h-32 bg-white rounded-full" />
-        </div>
-        <div className="absolute bottom-20 right-10 opacity-20">
-          <div className="w-24 h-24 bg-yellow-300 rounded-full" />
-        </div>
       </section>
+      {/* Decorative Elements */}
+      <div className="absolute top-20 left-10 opacity-20">
+        <div className="w-32 h-32 bg-white rounded-full" />
+      </div>
+      <div className="absolute bottom-20 right-10 opacity-20">
+        <div className="w-24 h-24 bg-yellow-300 rounded-full" />
+      </div>
 
       {/* Features Section */}
       <section className="py-16 bg-white">
@@ -142,17 +144,17 @@ export default function HomePage() {
                     <img
                       src={category.image_url}
                       alt={category.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out animate-fade-in"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Globe className="h-16 w-16 text-white opacity-80" />
+                      <Globe className="h-16 w-16 text-white opacity-80 animate-fade-in" />
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-colors" />
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors animate-fade-in-up">
                     {category.name}
                   </h3>
                   <p className="text-gray-600 text-sm">

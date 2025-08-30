@@ -45,9 +45,9 @@ export default function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
             <img 
-              src="/sweetland-logo.jpeg" 
-              alt="Sweet Trip" 
-              className="h-12 w-auto rounded-lg"
+              src="/sweetlogo.jpeg" 
+              alt="Sweet Trip Logo" 
+              className="h-12 w-auto rounded-lg animate-bounce"
             />
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">

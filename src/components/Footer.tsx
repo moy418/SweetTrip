@@ -11,9 +11,9 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <img 
-                src="/sweetland-logo.jpeg" 
-                alt="Sweet Trip" 
-                className="h-8 w-auto rounded"
+                src="/sweetlogo.jpeg" 
+                alt="Sweet Trip Logo" 
+                className="h-8 w-auto rounded animate-bounce"
               />
               <span className="text-xl font-bold">Sweet Trip</span>
             </div>
@@ -103,17 +103,13 @@ export default function Footer() {
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-400">hello@sweettrip.com</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-400">1-800-SWEET-TRIP</span>
+                <span className="text-gray-400">hello@sweettripcandy.com</span>
               </div>
               <div className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
                 <span className="text-gray-400">
-                  123 Candy Lane<br />
-                  Sweet City, SC 12345<br />
+                  402 S El Paso St<br />
+                  El Paso, TX 79901<br />
                   United States
                 </span>
               </div>
