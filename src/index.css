@@ -193,8 +193,99 @@ img {
   @apply border-2 border-purple-600 text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-purple-600 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2;
 }
 
+/* Small animated overlays for category cards */
+@keyframes sparkle {
+  0% { transform: translateY(0) scale(0.9) rotate(0deg); opacity: 0 }
+  30% { opacity: 1 }
+  70% { transform: translateY(-6px) scale(1.05) rotate(10deg); opacity: 0.9 }
+  100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0 }
+}
+
+@keyframes swirl {
+  from { transform: rotate(0deg) scale(0.9); opacity: 0 }
+  50% { opacity: 1 }
+  to { transform: rotate(360deg) scale(1); opacity: 0 }
+}
+
+@keyframes pulse-burst {
+  0% { transform: scale(0.8); opacity: 0 }
+  40% { transform: scale(1.08); opacity: 0.9 }
+  100% { transform: scale(1); opacity: 0 }
+}
+
+.cat-anim {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 30;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-size: 22px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+
+.cat-anim.s-sparkle {
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  color: #fff;
+  animation: sparkle 2.6s ease-in-out infinite;
+}
+
+.cat-anim.s-swirl {
+  background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  color: #fff;
+  animation: swirl 3.2s linear infinite;
+}
+
+.cat-anim.s-burst {
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  color: #fff;
+  animation: pulse-burst 2.8s ease-in-out infinite;
+}
+
+/* color variants */
+.cat-anim.theme-choco { background: linear-gradient(135deg,#a16207aa,#7c2d12bb); }
+.cat-anim.theme-fruit { background: linear-gradient(135deg,#ff7ab2aa,#ffd166bb); }
+.cat-anim.theme-spicy { background: linear-gradient(135deg,#ff6b6baa,#ff8c42bb); }
+.cat-anim.theme-citrus { background: linear-gradient(135deg,#facc15aa,#f97316bb); }
+.cat-anim.theme-asia { background: linear-gradient(135deg,#8b5cf6aa,#5b21b6bb); }
+.cat-anim.theme-global { background: linear-gradient(135deg,#60a5faaa,#7c3aedbb); }
+
+
 /* Reduce visual density of candy images on very small screens */
 @media (max-width: 480px) {
   .floating-candies img { opacity: 0.6 }
   .floating-candies { opacity: 0.7 }
+}
+
+/* Background video helper - reduced footprint so it doesn't fill entire hero */
+.bg-video-wrapper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 0;
+  padding: 1rem; /* keep some breathing room */
+}
+
+.bg-video {
+  width: auto;
+  height: 50%; /* midpoint size (leans small) */
+  max-height: 360px;
+  min-height: 160px;
+  object-fit: cover;
+  opacity: 0.96;
+  border-radius: 0.6rem;
+  box-shadow: 0 10px 32px rgba(16,24,40,0.28);
+}
+
+@media (max-width: 768px) {
+  .bg-video { height: 30%; max-height: 180px; min-height: 100px; opacity: 0.98; }
+  .bg-video-wrapper { padding: 0.5rem; }
 }
