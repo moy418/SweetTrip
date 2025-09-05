@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Star, Globe, Truck, Shield, Gift } from 'lucide-react'
 import { supabase, Product, Category } from '../lib/supabase'
 import ProductGrid from '../components/ProductGrid'
+import SimpleVideoLogo from '../components/SimpleVideoLogo'
 import toast from 'react-hot-toast'
 
 export default function HomePage() {
@@ -48,87 +49,252 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with Animation */}
-      <section className="relative bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-400 text-white py-20 overflow-hidden">
-        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 opacity-30 animate-pulse z-0">
-          <img src="/sweetlogo.jpeg" alt="Sweet Trip Logo" className="w-64 h-64 object-contain mx-auto" />
+      {/* Hero Section - Completely Redesigned */}
+      <section className="relative min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-blue-600 text-white overflow-hidden flex items-center">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0">
+          {/* Floating candy shapes */}
+          <div className="absolute top-20 left-20 w-20 h-20 bg-pink-300 rounded-full opacity-30 animate-bounce delay-100"></div>
+          <div className="absolute top-40 right-32 w-16 h-16 bg-yellow-300 rounded-full opacity-25 animate-bounce delay-300"></div>
+          <div className="absolute bottom-32 left-32 w-24 h-24 bg-purple-300 rounded-full opacity-20 animate-bounce delay-500"></div>
+          <div className="absolute bottom-20 right-20 w-12 h-12 bg-blue-300 rounded-full opacity-30 animate-bounce delay-700"></div>
+          
+          {/* Geometric shapes */}
+          <div className="absolute top-1/3 left-10 w-8 h-8 bg-white/20 rotate-45 animate-pulse delay-200"></div>
+          <div className="absolute top-1/4 right-16 w-6 h-6 bg-white/15 rotate-12 animate-pulse delay-400"></div>
+          <div className="absolute bottom-1/3 right-10 w-10 h-10 bg-white/10 rotate-45 animate-pulse delay-600"></div>
+          
+          {/* Gradient orbs */}
+          <div className="absolute top-1/2 left-1/4 w-32 h-32 bg-gradient-to-r from-pink-400/20 to-purple-400/20 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute top-1/3 right-1/4 w-40 h-40 bg-gradient-to-r from-purple-400/15 to-blue-400/15 rounded-full blur-2xl animate-pulse delay-1000"></div>
         </div>
+
+        {/* Video Logo - Enhanced and Larger */}
+        <div className="absolute top-10 right-10 z-10">
+          <SimpleVideoLogo
+            src="/sweet-trip-video-logo.mp4"
+            poster="/sweet-trip-logo.png"
+            size="hero"
+            className="animate-float scale-150"
+            showBorder={true}
+            showGlow={true}
+          />
+        </div>
+
+        {/* Main Content - Optimized Layout */}
+        <div className="container mx-auto px-4 relative z-20 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[80vh]">
+            {/* Left Side - Text Content */}
+            <div className="text-center lg:text-left space-y-6">
+              {/* Badge */}
+              <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 animate-fade-in-down">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium">🌍 50+ Countries • 🍭 1000+ Products</span>
+              </div>
+
+              {/* Main Headline - More Compact */}
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight">
+                <span className="block text-white animate-fade-in-down">Discover</span>
+                <span className="block bg-gradient-to-r from-pink-300 via-yellow-300 to-orange-300 bg-clip-text text-transparent animate-gradient-x">
+                  Candy
+                </span>
+                <span className="block text-white animate-fade-in-down delay-200">from</span>
+                <span className="block bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 bg-clip-text text-transparent animate-gradient-x delay-300">
+                  Around the World
+                </span>
+              </h1>
+
+              {/* Subtitle - More Compact */}
+              <p className="text-lg md:text-xl text-white/90 leading-relaxed max-w-xl animate-fade-in-up delay-400">
+                Embark on a <span className="font-bold text-yellow-300">sweet adventure</span> and discover exotic flavors, 
+                unique treats, and authentic candies from every corner of the globe.
+              </p>
+
+              {/* CTA Buttons - More Compact */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-in-up delay-600">
+                <Link
+                  to="/featured"
+                  className="group relative bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center space-x-3 shadow-2xl hover:shadow-pink-500/25 hover:scale-105 transform"
+                >
+                  <span>🍭 Shop Featured</span>
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-purple-500 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity"></div>
+                </Link>
+                <Link
+                  to="/categories"
+                  className="group bg-white/20 backdrop-blur-sm border-2 border-white/30 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/30 hover:border-white/50 transition-all duration-300 flex items-center justify-center space-x-3 shadow-xl hover:shadow-white/25 hover:scale-105 transform"
+                >
+                  <Globe className="h-5 w-5" />
+                  <span>🌍 Explore Categories</span>
+                </Link>
+              </div>
+
+              {/* Trust Indicators - More Compact */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 animate-fade-in-up delay-800">
+                <div className="flex items-center space-x-2 text-white/80">
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">✓</span>
+                  </div>
+                  <span className="text-xs font-medium">Free Shipping $60+</span>
+                </div>
+                <div className="flex items-center space-x-2 text-white/80">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">🛡️</span>
+                  </div>
+                  <span className="text-xs font-medium">100% Authentic</span>
+                </div>
+                <div className="flex items-center space-x-2 text-white/80">
+                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">⭐</span>
+                  </div>
+                  <span className="text-xs font-medium">4.9/5 Rating</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side - Visual Elements - More Dense */}
+            <div className="relative hidden lg:block h-full">
+              {/* Floating candy icons - More distributed */}
+              <div className="absolute top-5 left-5 text-5xl animate-bounce delay-100">🍬</div>
+              <div className="absolute top-16 right-8 text-4xl animate-bounce delay-300">🍭</div>
+              <div className="absolute top-32 left-2 text-3xl animate-bounce delay-500">🍫</div>
+              <div className="absolute bottom-32 right-2 text-4xl animate-bounce delay-700">🍪</div>
+              <div className="absolute bottom-16 left-16 text-3xl animate-bounce delay-900">🍩</div>
+              <div className="absolute top-1/2 left-8 text-3xl animate-bounce delay-1100">🍰</div>
+              <div className="absolute bottom-1/3 right-12 text-3xl animate-bounce delay-1300">🍯</div>
+              
+              {/* Central visual - Larger and more prominent */}
+              <div className="relative mx-auto w-96 h-96 mt-8">
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-400/30 to-purple-400/30 rounded-full blur-3xl animate-pulse"></div>
+                <div className="relative w-full h-full bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20">
+                  <div className="text-9xl animate-spin-slow">🌍</div>
+                </div>
+              </div>
+
+              {/* Additional decorative elements */}
+              <div className="absolute top-1/4 right-1/4 w-16 h-16 bg-yellow-300/20 rounded-full animate-pulse delay-500"></div>
+              <div className="absolute bottom-1/4 left-1/4 w-12 h-12 bg-pink-300/20 rounded-full animate-pulse delay-700"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-gradient-to-br from-white to-pink-50 relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 right-20 w-40 h-40 bg-pink-100 rounded-full opacity-30 animate-pulse"></div>
+          <div className="absolute bottom-20 left-20 w-32 h-32 bg-purple-100 rounded-full opacity-30 animate-pulse delay-1000"></div>
+        </div>
+        
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight animate-fade-in-down">
-              Discover Candy from
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300 animate-gradient-x">
-                Around the World
-              </span>
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-blue-100 animate-fade-in-up">
-              Explore exotic flavors and unique treats from every corner of the globe. From Japanese Kit Kats to Korean snacks, embark on a sweet journey with Sweet Trip.
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
+              Why Choose Sweet Trip?
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              We bring you the best of international candy culture with unmatched quality and service.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-200">
-              <Link
-                to="/featured"
-                className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2 shadow-lg hover:scale-105 transform transition-transform duration-300"
-              >
-                <span>Shop Featured Products</span>
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-              <Link
-                to="/categories"
-                className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-colors flex items-center justify-center space-x-2 shadow-lg hover:scale-105 transform transition-transform duration-300"
-              >
-                <Globe className="h-5 w-5" />
-                <span>Explore Categories</span>
-              </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-20 h-20 bg-gradient-to-br from-pink-400 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <Truck className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">Free Shipping</h3>
+              <p className="text-gray-600 leading-relaxed">Free shipping on orders over $60 worldwide. Fast and secure delivery to your doorstep.</p>
+            </div>
+            <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <Shield className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Authentic Products</h3>
+              <p className="text-gray-600 leading-relaxed">100% authentic international candies and snacks. We source directly from manufacturers.</p>
+            </div>
+            <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <Gift className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">Unique Flavors</h3>
+              <p className="text-gray-600 leading-relaxed">Discover flavors you can't find anywhere else. Exclusive and limited edition treats.</p>
             </div>
           </div>
         </div>
       </section>
-      {/* Decorative Elements */}
-      <div className="absolute top-20 left-10 opacity-20">
-        <div className="w-32 h-32 bg-white rounded-full" />
-      </div>
-      <div className="absolute bottom-20 right-10 opacity-20">
-        <div className="w-24 h-24 bg-yellow-300 rounded-full" />
-      </div>
 
-      {/* Features Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Truck className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Free Shipping</h3>
-              <p className="text-gray-600">Free shipping on orders over $60 worldwide</p>
+      {/* Video Showcase Section */}
+      <section className="py-20 bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-pink-200 rounded-full opacity-20 animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-24 h-24 bg-purple-200 rounded-full opacity-20 animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-blue-200 rounded-full opacity-20 animate-pulse delay-500"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-6">
+              Experience Sweet Trip
+            </h2>
+            <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
+              Watch our brand come to life and discover the magic behind our international candy collection. 
+              Every frame tells a story of flavor, adventure, and sweet discoveries from around the world.
+            </p>
+          </div>
+          
+          <div className="flex justify-center mb-12">
+            <SimpleVideoLogo
+              src="/sweet-trip-video-logo.mp4"
+              poster="/sweet-trip-logo.png"
+              size="hero"
+              className="shadow-2xl"
+              showBorder={true}
+              showGlow={true}
+            />
+          </div>
+          
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="text-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg">
+              <div className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-2">50+</div>
+              <div className="text-gray-700 font-medium">Countries</div>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Authentic Products</h3>
-              <p className="text-gray-600">100% authentic international candies and snacks</p>
+            <div className="text-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg">
+              <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">1000+</div>
+              <div className="text-gray-700 font-medium">Products</div>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Gift className="h-8 w-8 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Unique Flavors</h3>
-              <p className="text-gray-600">Discover flavors you can't find anywhere else</p>
+            <div className="text-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg">
+              <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">24/7</div>
+              <div className="text-gray-700 font-medium">Sweet Dreams</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Categories Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+      <section className="py-20 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 right-10 w-32 h-32 bg-blue-200 rounded-full opacity-20 animate-pulse"></div>
+          <div className="absolute bottom-10 left-10 w-24 h-24 bg-purple-200 rounded-full opacity-20 animate-pulse delay-1000"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
               Explore by Region
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Each region offers its own unique candy culture and flavors. Discover what makes each destination special.
+            <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
+              Each region offers its own unique candy culture and flavors. Discover what makes each destination special 
+              and embark on a sweet journey around the world.
             </p>
           </div>
           
@@ -137,29 +303,35 @@ export default function HomePage() {
               <Link
                 key={category.id}
                 to={`/category/${category.slug}`}
-                className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+                className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden hover:-translate-y-2"
               >
-                <div className="aspect-video bg-gradient-to-br from-blue-500 to-cyan-400 relative overflow-hidden">
+                <div className="aspect-video bg-gradient-to-br from-pink-400 via-purple-500 to-blue-500 relative overflow-hidden">
                   {category.image_url ? (
                     <img
                       src={category.image_url}
                       alt={category.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out animate-fade-in"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Globe className="h-16 w-16 text-white opacity-80 animate-fade-in" />
+                      <Globe className="h-16 w-16 text-white opacity-80" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-colors" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent group-hover:from-black/60 transition-all duration-300" />
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-pink-200 transition-colors">
+                      {category.name}
+                    </h3>
+                  </div>
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors animate-fade-in-up">
-                    {category.name}
-                  </h3>
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-gray-600 text-sm leading-relaxed">
                     {category.description}
                   </p>
+                  <div className="mt-4 flex items-center text-pink-600 font-medium group-hover:text-purple-600 transition-colors">
+                    <span>Explore Collection</span>
+                    <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </div>
               </Link>
             ))}
@@ -239,21 +411,29 @@ export default function HomePage() {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-16 bg-blue-600 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      <section className="py-20 bg-gradient-to-br from-pink-500 via-purple-600 to-blue-600 text-white relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-24 h-24 bg-white/10 rounded-full animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-white/10 rounded-full animate-pulse delay-500"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Stay Sweet with Sweet Trip
           </h2>
-          <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
-            Get the latest updates on new arrivals, exclusive offers, and candy discoveries from around the world.
+          <p className="text-xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed">
+            Get the latest updates on new arrivals, exclusive offers, and candy discoveries from around the world. 
+            Join our sweet community and never miss a flavor adventure!
           </p>
-          <div className="max-w-md mx-auto flex gap-4">
+          <div className="max-w-lg mx-auto flex gap-4">
             <input
               type="email"
               placeholder="Enter your email"
-              className="flex-1 px-4 py-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-white"
+              className="flex-1 px-6 py-4 rounded-2xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-white/50 text-lg"
             />
-            <button className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            <button className="bg-white text-purple-600 px-8 py-4 rounded-2xl font-bold hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg">
               Subscribe
             </button>
           </div>

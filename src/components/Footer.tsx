@@ -9,13 +9,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <img 
-                src="/sweetlogo.jpeg" 
+                src="/sweet-trip-logo.png" 
                 alt="Sweet Trip Logo" 
-                className="h-8 w-auto rounded animate-bounce"
+                className="h-16 w-16 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               />
-              <span className="text-xl font-bold">Sweet Trip</span>
+              <span className="text-2xl font-bold">Sweet Trip</span>
             </div>
             <p className="text-gray-400 text-sm">
               Discover Candy from Around the World. We bring you the most exotic and delicious treats from every corner of the globe.

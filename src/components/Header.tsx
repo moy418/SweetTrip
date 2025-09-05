@@ -43,17 +43,17 @@ export default function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center space-x-4">
             <img 
-              src="/sweetlogo.jpeg" 
+              src="/sweet-trip-logo.png" 
               alt="Sweet Trip Logo" 
-              className="h-12 w-auto rounded-lg animate-bounce"
+              className="h-20 w-20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             />
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                 Sweet Trip
               </h1>
-              <p className="text-xs text-gray-600">Discover Candy from Around the World</p>
+              <p className="text-sm text-gray-600 font-medium">Discover Candy from Around the World</p>
             </div>
           </Link>
 
