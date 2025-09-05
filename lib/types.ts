@@ -79,3 +79,4 @@ export interface Coupon {
   expires_at?: string
   is_active: boolean
 }
+
