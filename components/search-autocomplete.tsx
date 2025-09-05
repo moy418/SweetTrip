@@ -153,3 +153,4 @@ export function SearchAutocomplete({ onClose }: SearchAutocompleteProps) {
     </div>
   )
 }
+
