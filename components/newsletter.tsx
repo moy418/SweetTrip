@@ -30,7 +30,7 @@ export function Newsletter() {
   }
 
   return (
-    <section className="py-16 bg-blue-600 text-white">
+    <section className="py-16 site-gradient text-white">
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">
           Stay Sweet with Sweet Trip
@@ -50,7 +50,7 @@ export function Newsletter() {
           <button 
             type="submit"
             disabled={isSubmitting}
-            className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary"
           >
             {isSubmitting ? 'Subscribing...' : 'Subscribe'}
           </button>
@@ -59,4 +59,5 @@ export function Newsletter() {
     </section>
   )
 }
+
 

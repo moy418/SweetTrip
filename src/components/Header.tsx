@@ -31,26 +31,26 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-white shadow-lg sticky top-0 z-50">
+  <header className="site-gradient sticky top-0 z-50 shadow-lg">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-2">
-        <div className="container mx-auto px-4 text-center text-sm">
+    <div className="top-banner py-2 bg-blue-500/90">
+        <div className="container mx-auto px-4 text-center text-sm text-white font-medium">
           Free shipping on orders over $60!
         </div>
       </div>
 
       {/* Main Header */}
       <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-4">
             <img 
               src="/sweet-trip-logo.png" 
               alt="Sweet Trip Logo" 
-              className="h-20 w-20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="h-16 w-16 sm:h-20 sm:w-20 md:h-32 md:w-32 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             />
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl md:text-3xl font-bold bg-gradient-to-r from-pink-300 via-violet-300 to-indigo-400 bg-clip-text text-transparent">
                 Sweet Trip
               </h1>
               <p className="text-sm text-gray-600 font-medium">Discover Candy from Around the World</p>

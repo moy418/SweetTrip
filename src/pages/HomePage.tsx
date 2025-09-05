@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Star, Globe, Truck, Shield, Gift } from 'lucide-react'
 import { supabase, Product, Category } from '../lib/supabase'
@@ -10,6 +10,119 @@ export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const candiesRefInitialized = useRef(false)
+
+  useEffect(() => {
+    // Populate floating candies for the Vite app version (localhost:5173)
+    if (typeof window === 'undefined') return
+    if (candiesRefInitialized.current) return
+    const container = document.getElementById('vite-floating-candies')
+    if (!container) return
+    candiesRefInitialized.current = true
+
+    const isMobile = window.matchMedia('(max-width: 768px)').matches
+    const TOTAL = isMobile ? 6 : 24
+    const candySrcs = ['/sweetland-logo.jpeg', '/sweetlogo.jpeg', '/sweet-trip-logo.png']
+
+    // store refs and base positions
+    const candyEls: HTMLImageElement[] = []
+
+    for (let i = 0; i < TOTAL; i++) {
+      const img = document.createElement('img')
+      img.src = candySrcs[i % candySrcs.length]
+      img.className = 'floating-candy'
+      const size = Math.round(20 + Math.random() * 60)
+      const baseLeft = Math.round(Math.random() * 90)
+      const baseTop = Math.round(5 + Math.random() * 80)
+      img.style.width = `${size}px`
+      img.style.left = `${baseLeft}%`
+      img.style.top = `${baseTop}%`
+      img.dataset.baseLeft = String(baseLeft)
+      img.dataset.baseTop = String(baseTop)
+      img.style.animationDuration = `${6 + Math.random() * 10}s`
+      img.style.animationDelay = `${Math.random() * 6}s`
+      img.style.opacity = `${isMobile ? 0.45 + Math.random() * 0.35 : 0.6 + Math.random() * 0.4}`
+      img.alt = 'sweet'
+      img.setAttribute('aria-hidden', 'true')
+      container.appendChild(img)
+      candyEls.push(img)
+    }
+
+    // Sensor handling: device orientation (gyroscope) + pointer fallback
+    let rafId = 0
+
+    const clamp = (v: number, a = -1, b = 1) => Math.max(a, Math.min(b, v))
+
+    // apply tilt offsets by updating left/top from base positions
+    const applyTilt = (tiltX: number, tiltY: number) => {
+      // tiltX, tiltY expected in range -1..1
+      for (const img of candyEls) {
+        const baseLeft = Number(img.dataset.baseLeft || 50)
+        const baseTop = Number(img.dataset.baseTop || 30)
+        // move fractionally (percent) relative to base
+        const offsetLeft = tiltX * 6 // percent
+        const offsetTop = tiltY * 6 // percent
+        img.style.left = `${baseLeft + offsetLeft}%`
+        img.style.top = `${baseTop + offsetTop}%`
+      }
+    }
+
+    // DeviceOrientation handler
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      // event.gamma === left-to-right tilt in degrees [-90,90]
+      // event.beta === front-to-back tilt in degrees [-180,180]
+      const gamma = e.gamma ?? 0
+      const beta = e.beta ?? 0
+      // normalize: use +/- 45deg as full tilt
+      const tiltX = clamp(gamma / 45)
+      const tiltY = clamp(beta / 45)
+
+      // schedule via rAF
+      if (rafId) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(() => applyTilt(tiltX, tiltY))
+    }
+
+    // Pointer fallback for desktop: translate pointer position to tilt
+    const handlePointer = (ev: PointerEvent) => {
+      const w = window.innerWidth
+      const h = window.innerHeight
+      const x = (ev.clientX / w) * 2 - 1 // -1 .. 1
+      const y = (ev.clientY / h) * 2 - 1 // -1 .. 1
+      // invert Y so dragging up moves candies up
+      const tiltX = clamp(x)
+      const tiltY = clamp(y)
+      if (rafId) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(() => applyTilt(tiltX, tiltY))
+    }
+
+    // iOS 13+ permission flow for DeviceMotion/Orientation
+    const enableDeviceOrientation = async () => {
+      // @ts-ignore
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+        try {
+          // @ts-ignore
+          const perm = await (DeviceMotionEvent as any).requestPermission()
+          if (perm === 'granted') window.addEventListener('deviceorientation', handleOrientation)
+          else window.addEventListener('pointermove', handlePointer)
+        } catch (err) {
+          window.addEventListener('pointermove', handlePointer)
+        }
+      } else if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientation', handleOrientation)
+      } else {
+        window.addEventListener('pointermove', handlePointer)
+      }
+    }
+
+    enableDeviceOrientation()
+
+    return () => {
+      if (container) container.innerHTML = ''
+      window.removeEventListener('deviceorientation', handleOrientation)
+      window.removeEventListener('pointermove', handlePointer)
+      if (rafId) cancelAnimationFrame(rafId)
+    }
+  }, [])
 
   useEffect(() => {
     loadData()
@@ -50,7 +163,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section - Completely Redesigned */}
-      <section className="relative min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-blue-600 text-white overflow-hidden flex items-center">
+  <section className="relative min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-blue-600 text-white overflow-hidden flex items-center pt-24">
         {/* Animated Background Elements */}
         <div className="absolute inset-0">
           {/* Floating candy shapes */}
@@ -80,6 +193,9 @@ export default function HomePage() {
             showGlow={true}
           />
         </div>
+
+  {/* Floating candies layer for Vite (dev) */}
+  <div className="floating-candies absolute inset-0 pointer-events-none z-10 md:z-20" id="vite-floating-candies" aria-hidden="true"></div>
 
         {/* Main Content - Optimized Layout */}
         <div className="container mx-auto px-4 relative z-20 py-8">

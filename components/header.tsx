@@ -38,7 +38,7 @@ export function Header() {
   return (
     <>
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-2">
+      <div className="top-banner py-2">
         <div className="container mx-auto px-4 text-center text-sm">
           <span className="font-medium">Free shipping on orders over $60!</span>
         </div>
@@ -46,12 +46,12 @@ export function Header() {
 
       {/* Main Header */}
       <header 
-        className={`sticky top-0 z-50 transition-all duration-300 ${
-          isScrolled 
-            ? 'bg-white/95 backdrop-blur-md shadow-lg' 
-            : 'bg-white shadow-sm'
-        }`}
-      >
+          className={`sticky top-0 z-50 transition-all duration-300 ${
+            isScrolled 
+              ? 'site-gradient/95 backdrop-blur-md shadow-lg' 
+              : 'site-gradient shadow-sm'
+          }`}
+        >
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -60,8 +60,8 @@ export function Header() {
                 <Image
                   src="/sweet-trip-logo.png"
                   alt="Sweet Trip Logo"
-                  width={80}
-                  height={80}
+                  width={120}
+                  height={120}
                   className="rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105"
                   priority
                 />
@@ -262,4 +262,5 @@ export function Header() {
     </>
   )
 }
+
 
