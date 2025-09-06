@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Search, ShoppingCart, Heart, User, Menu, X } from 'lucide-react'
+import { Search, ShoppingCart, Heart, User, Menu, X, Sun, Moon } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { useCartStore } from '@/store/cart-store'
 import { CartDrawer } from './cart-drawer'
@@ -16,6 +16,8 @@ export function Header() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [theme, setTheme] = useState<'light'|'dark'>(() => (typeof window !== 'undefined' && (localStorage.getItem('site-theme') as 'light'|'dark')) || 'light')
+  const [lang, setLang] = useState<'en'|'es'>(() => (typeof window !== 'undefined' && (localStorage.getItem('site-lang') as 'en'|'es')) || 'en')
 
   const cartItemsCount = items.reduce((total, item) => total + item.quantity, 0)
 
@@ -27,6 +29,17 @@ export function Header() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    localStorage.setItem('site-theme', theme)
+  }, [theme])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    localStorage.setItem('site-lang', lang)
+  }, [lang])
+
   const handleSignOut = async () => {
     try {
       await signOut()
@@ -35,24 +48,21 @@ export function Header() {
     }
   }
 
+  const searchPlaceholder = lang === 'es' ? 'Buscar dulces exóticos...' : 'Search for exotic candies...'
+
   return (
     <>
       {/* Top Banner */}
-      <div className="top-banner py-2">
-        <div className="container mx-auto px-4 text-center text-sm">
-          <span className="font-medium">Free shipping on orders over $60!</span>
+        {/* Top Banner - match footer style */}
+        <div className="top-banner py-2 bg-gray-900 text-white">
+          <div className="container mx-auto px-4 text-center text-sm text-white">
+            <span className="font-medium">{lang === 'es' ? 'Envío gratis en pedidos sobre $60!' : 'Free shipping on orders over $60!'}</span>
+          </div>
         </div>
-      </div>
 
       {/* Main Header */}
-      <header 
-          className={`sticky top-0 z-50 transition-all duration-300 ${
-            isScrolled 
-              ? 'site-gradient/95 backdrop-blur-md shadow-lg' 
-              : 'site-gradient shadow-sm'
-          }`}
-        >
-        <div className="container mx-auto px-4 py-4">
+      <header className="sticky top-0 z-50 bg-gray-900 text-white shadow-lg">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-4 group">
@@ -70,7 +80,7 @@ export function Header() {
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                   Sweet Trip
                 </h1>
-                <p className="text-sm text-gray-600 font-medium">Discover Candy from Around the World</p>
+                    <p className="text-sm text-white/90 font-medium">{lang === 'es' ? 'Descubre dulces de todo el mundo' : 'Discover Candy from Around the World'}</p>
               </div>
             </Link>
 
@@ -96,7 +106,7 @@ export function Header() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search for exotic candies..."
+                  placeholder={searchPlaceholder}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                   onFocus={() => setIsSearchOpen(true)}
                 />
@@ -139,6 +149,29 @@ export function Header() {
                   </span>
                 )}
               </button>
+
+              {/* Theme toggle */}
+              <button
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                className="p-2 text-white/90 hover:text-white transition-colors"
+                aria-label="Toggle theme"
+                title={theme === 'light' ? (lang === 'es' ? 'Modo oscuro' : 'Dark mode') : (lang === 'es' ? 'Modo claro' : 'Light mode')}
+              >
+                {theme === 'light' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+
+              {/* Language selector */}
+              <div className="relative">
+                <select
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value as 'en'|'es')}
+                  className="bg-transparent border border-white/30 text-sm rounded-md px-2 py-1 text-white"
+                  aria-label="Language"
+                >
+                  <option value="en">EN</option>
+                  <option value="es">ES</option>
+                </select>
+              </div>
 
               {/* User Menu */}
               {user ? (

@@ -4,14 +4,12 @@ import { ArrowRight, Star, Globe, Truck, Shield, Gift } from 'lucide-react'
 import { supabase, Product, Category } from '../lib/supabase'
 import ProductGrid from '../components/ProductGrid'
 import SimpleVideoLogo from '../components/SimpleVideoLogo'
-import BackgroundVideo from '../components/BackgroundVideo'
 import toast from 'react-hot-toast'
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
-  const [categoryImages, setCategoryImages] = useState<Record<string, string>>({})
   const candiesRefInitialized = useRef(false)
 
   useEffect(() => {
@@ -23,107 +21,26 @@ export default function HomePage() {
     candiesRefInitialized.current = true
 
     const isMobile = window.matchMedia('(max-width: 768px)').matches
-    const TOTAL = isMobile ? 6 : 24
+  const TOTAL = isMobile ? 12 : 48
     const candySrcs = ['/sweetland-logo.jpeg', '/sweetlogo.jpeg', '/sweet-trip-logo.png']
-
-    // store refs and base positions
-    const candyEls: HTMLImageElement[] = []
 
     for (let i = 0; i < TOTAL; i++) {
       const img = document.createElement('img')
       img.src = candySrcs[i % candySrcs.length]
       img.className = 'floating-candy'
       const size = Math.round(20 + Math.random() * 60)
-      const baseLeft = Math.round(Math.random() * 90)
-      const baseTop = Math.round(5 + Math.random() * 80)
-      img.style.width = `${size}px`
-      img.style.left = `${baseLeft}%`
-      img.style.top = `${baseTop}%`
-      img.dataset.baseLeft = String(baseLeft)
-      img.dataset.baseTop = String(baseTop)
-      img.style.animationDuration = `${6 + Math.random() * 10}s`
-      img.style.animationDelay = `${Math.random() * 6}s`
-      img.style.opacity = `${isMobile ? 0.45 + Math.random() * 0.35 : 0.6 + Math.random() * 0.4}`
+  img.style.width = `${size}px`
+  img.style.left = `${Math.random() * 90}%`
+  img.style.top = `${5 + Math.random() * 80}%`
+  img.style.animationDuration = `${6 + Math.random() * 10}s`
+  img.style.animationDelay = `${Math.random() * 6}s`
+  img.style.opacity = `${isMobile ? 0.45 + Math.random() * 0.35 : 0.6 + Math.random() * 0.4}`
       img.alt = 'sweet'
       img.setAttribute('aria-hidden', 'true')
       container.appendChild(img)
-      candyEls.push(img)
     }
 
-    // Sensor handling: device orientation (gyroscope) + pointer fallback
-    let rafId = 0
-
-    const clamp = (v: number, a = -1, b = 1) => Math.max(a, Math.min(b, v))
-
-    // apply tilt offsets by updating left/top from base positions
-    const applyTilt = (tiltX: number, tiltY: number) => {
-      // tiltX, tiltY expected in range -1..1
-      for (const img of candyEls) {
-        const baseLeft = Number(img.dataset.baseLeft || 50)
-        const baseTop = Number(img.dataset.baseTop || 30)
-        // move fractionally (percent) relative to base
-        const offsetLeft = tiltX * 6 // percent
-        const offsetTop = tiltY * 6 // percent
-        img.style.left = `${baseLeft + offsetLeft}%`
-        img.style.top = `${baseTop + offsetTop}%`
-      }
-    }
-
-    // DeviceOrientation handler
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      // event.gamma === left-to-right tilt in degrees [-90,90]
-      // event.beta === front-to-back tilt in degrees [-180,180]
-      const gamma = e.gamma ?? 0
-      const beta = e.beta ?? 0
-      // normalize: use +/- 45deg as full tilt
-      const tiltX = clamp(gamma / 45)
-      const tiltY = clamp(beta / 45)
-
-      // schedule via rAF
-      if (rafId) cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(() => applyTilt(tiltX, tiltY))
-    }
-
-    // Pointer fallback for desktop: translate pointer position to tilt
-    const handlePointer = (ev: PointerEvent) => {
-      const w = window.innerWidth
-      const h = window.innerHeight
-      const x = (ev.clientX / w) * 2 - 1 // -1 .. 1
-      const y = (ev.clientY / h) * 2 - 1 // -1 .. 1
-      // invert Y so dragging up moves candies up
-      const tiltX = clamp(x)
-      const tiltY = clamp(y)
-      if (rafId) cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(() => applyTilt(tiltX, tiltY))
-    }
-
-    // iOS 13+ permission flow for DeviceMotion/Orientation
-    const enableDeviceOrientation = async () => {
-      // @ts-ignore
-      if (typeof DeviceMotionEvent !== 'undefined' && typeof (DeviceMotionEvent as any).requestPermission === 'function') {
-        try {
-          // @ts-ignore
-          const perm = await (DeviceMotionEvent as any).requestPermission()
-          if (perm === 'granted') window.addEventListener('deviceorientation', handleOrientation)
-          else window.addEventListener('pointermove', handlePointer)
-        } catch (err) {
-          window.addEventListener('pointermove', handlePointer)
-        }
-      } else if (window.DeviceOrientationEvent) {
-        window.addEventListener('deviceorientation', handleOrientation)
-      } else {
-        window.addEventListener('pointermove', handlePointer)
-      }
-    }
-
-    enableDeviceOrientation()
-
-    return () => {
-      if (container) container.innerHTML = ''
-      window.removeEventListener('deviceorientation', handleOrientation)
-      window.removeEventListener('pointermove', handlePointer)
-      if (rafId) cancelAnimationFrame(rafId)
-    }
+    return () => { if (container) container.innerHTML = '' }
   }, [])
 
   useEffect(() => {
@@ -141,154 +58,18 @@ export default function HomePage() {
         .eq('featured', true)
         .eq('is_active', true)
         .limit(8)
-
+      
       if (productsError) throw productsError
       setFeaturedProducts(products || [])
-
+      
       // Load categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select('*')
         .order('name')
-
+      
       if (categoriesError) throw categoriesError
       setCategories(categoriesData || [])
-
-      // If we have categories, try to fetch one product image per category
-      try {
-        const catIds = (categoriesData || []).map((c: any) => c.id)
-        console.debug('catIds for product sample query:', catIds)
-        if (catIds.length) {
-          const { data: prodSamples, error: prodError } = await supabase
-            .from('products')
-            .select('id, name, image_url, category_id')
-            .in('category_id', catIds)
-            .eq('is_active', true)
-            .limit(300)
-
-          if (prodError) {
-            console.error('Error fetching product samples for categories:', prodError)
-          }
-
-          // If the batch query failed, fall back to per-category queries so we still
-          // can populate images for the category cards.
-          if (prodError) {
-            const map: Record<string, string> = {}
-            try {
-              await Promise.all((categoriesData || []).map(async (c: any) => {
-                try {
-                  const { data: one, error: oneErr } = await supabase
-                    .from('products')
-                    .select('image_url')
-                    .eq('category_id', c.id)
-                    .eq('is_active', true)
-                    .not('image_url', 'is', null)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                  if (!oneErr && one && one.length && one[0].image_url) {
-                    map[String(c.id)] = one[0].image_url
-                  }
-                } catch (err) {
-                  // ignore per-category fetch errors
-                }
-              }))
-            } catch (err) {
-              console.warn('Fallback per-category product fetch failed', err)
-            }
-            console.debug('categoryImages map built (fallback):', map)
-            setCategoryImages(map)
-          }
-
-          if (!prodError && prodSamples) {
-            const map: Record<string, string> = {}
-            for (const p of prodSamples) {
-              const key = String((p as any).category_id)
-              if (p.image_url && !map[key]) map[key] = (p as any).image_url
-            }
-            // Prefer specific known products for some categories if available
-            // User-specified preferences:
-            // - chocolate -> "Dubai Chocolate Bar Pistachio by Oasis Treasures"
-            // - japanese -> "Pocari" (Pocari product)
-            // - mochi -> "Bamboo House Double Filling Mochi Strawberry Milk"
-            const normalizedCats: Record<string, any> = {}
-            for (const c of categoriesData || []) normalizedCats[String(c.id)] = c
-
-            const findByNeedles = (needles: string[]) => {
-              for (const n of needles) {
-                const f = prodSamples.find((pp: any) => (pp.name || '').toLowerCase().includes(n.toLowerCase()))
-                if (f) return f
-              }
-              return undefined
-            }
-
-            try {
-              // chocolate - prioritize the exact product names / variants you requested
-              const chocCat = (categoriesData || []).find((c: any) => /choc|chocolate|chocolate-collection|chocolate-bars|chocolate bars/.test((c.slug || c.name || '').toLowerCase()))
-              if (chocCat) {
-                const p = findByNeedles([
-                  'limited import - japanese kit kat dark chocolate',
-                  'kit kat dark chocolate 12ct',
-                  'kit kat dark',
-                  'pistachio',
-                  'dubai chocolate',
-                  'oasis treasures'
-                ])
-                if (p && p.image_url) map[String(chocCat.id)] = p.image_url
-              }
-
-              // japanese - prefer Pocari
-              const japCat = (categoriesData || []).find((c: any) => /japan|japanese|japanese-snacks/.test((c.slug || c.name || '').toLowerCase()))
-              if (japCat) {
-                const p = findByNeedles(['limited import - japanese kit kat dark chocolate', 'pocari', 'pocari sweat', 'pocari sweat candy']) || findByNeedles(['kit kat', 'kit kat japanese'])
-                if (p && p.image_url) map[String(japCat.id)] = p.image_url
-              }
-
-              // mochi - prefer Bamboo House
-              const mochiCat = (categoriesData || []).find((c: any) => /mochi|mochi-snacks/.test((c.slug || c.name || '').toLowerCase()))
-              if (mochiCat) {
-                const p = findByNeedles(['bamboo house', 'double filling mochi', 'mochi strawberry milk'])
-                if (p && p.image_url) map[String(mochiCat.id)] = p.image_url
-              }
-            } catch (err) {
-              // ignore matching errors and fall back to the generic map
-            }
-
-            // For any category still missing an image, try fetching one product for that category
-            const missing = (categoriesData || []).filter((c: any) => !map[String(c.id)])
-            if (missing.length) {
-              try {
-                await Promise.all(missing.map(async (c: any) => {
-                  try {
-                    const { data: one, error: oneErr } = await supabase
-                      .from('products')
-                      .select('image_url')
-                      .eq('category_id', c.id)
-                      .eq('is_active', true)
-                      .not('image_url', 'is', null)
-                      .order('created_at', { ascending: false })
-                      .limit(1)
-
-                    if (!oneErr && one && one.length && one[0].image_url) {
-                      map[String(c.id)] = one[0].image_url
-                    }
-                  } catch (err) {
-                    // ignore per-category errors
-                  }
-                }))
-              } catch (err) {
-                // ignore
-              }
-            }
-
-            // debug: log the mapping so we can inspect which images were chosen
-            console.debug('categoryImages map built:', map)
-            setCategoryImages(map)
-          }
-        }
-      } catch (err) {
-        // non-fatal: leave categoryImages empty
-        console.warn('Failed to load product images for categories', err)
-      }
       
     } catch (error) {
       console.error('Error loading data:', error)
@@ -320,11 +101,7 @@ export default function HomePage() {
           <div className="absolute top-1/3 right-1/4 w-40 h-40 bg-gradient-to-r from-purple-400/15 to-blue-400/15 rounded-full blur-2xl animate-pulse delay-1000"></div>
         </div>
 
-  {/* Background video (anima.mp4) - behind everything */}
-  <BackgroundVideo className="z-0" poster="/sweet-trip-logo.png" />
-
-  {/* Video Logo - Enhanced and Larger */}
-
+  {/* Floating video removed from hero — moved to the Video Showcase section below */}
 
   {/* Floating candies layer for Vite (dev) */}
   <div className="floating-candies absolute inset-0 pointer-events-none z-10 md:z-20" id="vite-floating-candies" aria-hidden="true"></div>
@@ -401,15 +178,21 @@ export default function HomePage() {
             </div>
 
             {/* Right Side - Visual Elements - More Dense */}
-            <div className="relative hidden lg:block h-full">
-              {/* Floating candy icons - More distributed */}
-              <div className="absolute top-5 left-5 text-5xl animate-bounce delay-100">🍬</div>
-              <div className="absolute top-16 right-8 text-4xl animate-bounce delay-300">🍭</div>
-              <div className="absolute top-32 left-2 text-3xl animate-bounce delay-500">🍫</div>
-              <div className="absolute bottom-32 right-2 text-4xl animate-bounce delay-700">🍪</div>
-              <div className="absolute bottom-16 left-16 text-3xl animate-bounce delay-900">🍩</div>
-              <div className="absolute top-1/2 left-8 text-3xl animate-bounce delay-1100">🍰</div>
-              <div className="absolute bottom-1/3 right-12 text-3xl animate-bounce delay-1300">🍯</div>
+        <div className="relative hidden lg:block h-full">
+          {/* Floating candy icons - More distributed + extra emojis */}
+          <div className="absolute top-5 left-5 text-5xl animate-bounce delay-100">🍬</div>
+          <div className="absolute top-16 right-8 text-4xl animate-bounce delay-300">🍭</div>
+          <div className="absolute top-32 left-2 text-3xl animate-bounce delay-500">🍫</div>
+          <div className="absolute bottom-32 right-2 text-4xl animate-bounce delay-700">🍪</div>
+          <div className="absolute bottom-16 left-16 text-3xl animate-bounce delay-900">🍩</div>
+          <div className="absolute top-1/2 left-8 text-3xl animate-bounce delay-1100">🍰</div>
+          <div className="absolute bottom-1/3 right-12 text-3xl animate-bounce delay-1300">🍯</div>
+          {/* Extra decorative floating emojis */}
+          <div className="absolute top-8 right-40 text-4xl animate-bounce delay-200">🍡</div>
+          <div className="absolute top-40 left-40 text-4xl animate-bounce delay-600">🍧</div>
+          <div className="absolute bottom-20 right-40 text-4xl animate-bounce delay-900">🥮</div>
+          <div className="absolute left-1/3 bottom-10 text-3xl animate-bounce delay-400">🍪</div>
+          <div className="absolute right-1/3 top-24 text-3xl animate-bounce delay-800">�</div>
               
               {/* Central visual - Larger and more prominent */}
               <div className="relative mx-auto w-96 h-96 mt-8">
@@ -500,7 +283,7 @@ export default function HomePage() {
           
           <div className="flex justify-center mb-12">
             <SimpleVideoLogo
-              src="/anima.mp4"
+              src="/sweet-trip-video-logo.mp4"
               poster="/sweet-trip-logo.png"
               size="hero"
               className="shadow-2xl"
@@ -547,71 +330,42 @@ export default function HomePage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((category) => {
-              // choose animation variant by scanning the description for keywords
-              const desc = (category.description || '').toLowerCase()
-              let animClass = 's-sparkle'
-              let themeClass = 'theme-global'
-              if (/choc|chocolate|brownie|cocoa/.test(desc)) { animClass = 's-burst'; themeClass = 'theme-choco' }
-              else if (/fruit|strawberry|berry|mango|pineapple|fruitier|fruity/.test(desc)) { animClass = 's-sparkle'; themeClass = 'theme-fruit' }
-              else if (/spicy|hot|pepper|tajin|chile/.test(desc)) { animClass = 's-swirl'; themeClass = 'theme-spicy' }
-              else if (/citrus|lemon|lime|orange|yuzu/.test(desc)) { animClass = 's-burst'; themeClass = 'theme-citrus' }
-              else if (/japan|korea|asia|taiwan|tokyo|osaka/.test(desc)) { animClass = 's-swirl'; themeClass = 'theme-asia' }
-
-              return (
-                <Link
-                  key={category.id}
-                  to={`/category/${category.slug}`}
-                  className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden hover:-translate-y-2 relative"
-                >
-                  <div className="aspect-video bg-gradient-to-br from-pink-400 via-purple-500 to-blue-500 relative overflow-hidden">
-                    {/* animated overlay badge */}
-                    <div className={`cat-anim ${animClass} ${themeClass}`} aria-hidden="true">
-                      {/** choose an emoji symbol by theme for quick recognition */}
-                      {themeClass === 'theme-choco' && '🍫'}
-                      {themeClass === 'theme-fruit' && '🍓'}
-                      {themeClass === 'theme-spicy' && '🌶️'}
-                      {themeClass === 'theme-citrus' && '🍋'}
-                      {themeClass === 'theme-asia' && '🦊'}
-                      {themeClass === 'theme-global' && '🌍'}
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                to={`/category/${category.slug}`}
+                className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden hover:-translate-y-2"
+              >
+                <div className="aspect-video bg-gradient-to-br from-pink-400 via-purple-500 to-blue-500 relative overflow-hidden">
+                  {category.image_url ? (
+                    <img
+                      src={category.image_url}
+                      alt={category.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Globe className="h-16 w-16 text-white opacity-80" />
                     </div>
-
-                    {categoryImages[String(category.id)] ? (
-                      <img
-                        src={categoryImages[String(category.id)]}
-                        alt={category.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
-                      />
-                    ) : category.image_url ? (
-                      <img
-                        src={category.image_url}
-                        alt={category.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Globe className="h-16 w-16 text-white opacity-80" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent group-hover:from-black/60 transition-all duration-300" />
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-pink-200 transition-colors">
-                        {category.name}
-                      </h3>
-                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent group-hover:from-black/60 transition-all duration-300" />
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-pink-200 transition-colors">
+                      {category.name}
+                    </h3>
                   </div>
-                  <div className="p-6">
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      {category.description}
-                    </p>
-                    <div className="mt-4 flex items-center text-pink-600 font-medium group-hover:text-purple-600 transition-colors">
-                      <span>Explore Collection</span>
-                      <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </div>
+                </div>
+                <div className="p-6">
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {category.description}
+                  </p>
+                  <div className="mt-4 flex items-center text-pink-600 font-medium group-hover:text-purple-600 transition-colors">
+                    <span>Explore Collection</span>
+                    <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </div>
-                </Link>
-              )
-            })}
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>

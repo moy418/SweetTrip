@@ -30,17 +30,33 @@ export default function Header() {
     }
   }
 
+  const [theme, setTheme] = React.useState<'light'|'dark'>(() => (typeof window !== 'undefined' && localStorage.getItem('site-theme')) as 'light'|'dark' || 'light')
+  const [lang, setLang] = React.useState<'en'|'es'>(() => (typeof window !== 'undefined' && (localStorage.getItem('site-lang') as 'en'|'es')) || 'en')
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    localStorage.setItem('site-theme', theme)
+  }, [theme])
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+    localStorage.setItem('site-lang', lang)
+  }, [lang])
+
+  const bannerText = lang === 'es' ? 'Envío gratis en pedidos sobre $60!' : 'Free shipping on orders over $60!'
+
   return (
-  <header className="site-gradient sticky top-0 z-50 shadow-lg">
-      {/* Top Banner */}
-    <div className="top-banner py-2 bg-blue-500/90">
-        <div className="container mx-auto px-4 text-center text-sm text-white font-medium">
-          Free shipping on orders over $60!
+  <header className="sticky top-0 z-50 bg-gray-900 text-white shadow-lg">
+      {/* Top Banner - match footer */}
+    <div className="top-banner py-2 bg-gray-900 text-white">
+        <div className="container mx-auto px-4 text-center text-sm text-white">
+          {bannerText}
         </div>
       </div>
 
       {/* Main Header */}
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-4">
@@ -50,22 +66,22 @@ export default function Header() {
               className="h-16 w-16 sm:h-20 sm:w-20 md:h-32 md:w-32 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             />
             <div>
-              <h1 className="text-2xl sm:text-3xl md:text-3xl font-bold bg-gradient-to-r from-pink-300 via-violet-300 to-indigo-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl md:text-3xl font-bold text-white">
                 Sweet Trip
               </h1>
-              <p className="text-sm text-gray-600 font-medium">Discover Candy from Around the World</p>
+              <p className="text-sm text-white/80 font-medium">Discover Candy from Around the World</p>
             </div>
           </Link>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-lg mx-8">
+              <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-lg mx-8">
             <div className="relative w-full">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for exotic candies..."
-                className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={lang === 'es' ? 'Buscar dulces exóticos...' : 'Search for exotic candies...'}
+                className="w-full px-4 py-2 pr-10 border border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-800 text-white"
               />
               <button 
                 type="submit"
@@ -100,6 +116,28 @@ export default function Header() {
                 </span>
               )}
             </button>
+
+            {/* Theme toggle */}
+            <button
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? '🌞' : '🌙'}
+            </button>
+
+            {/* Language selector */}
+            <div className="relative">
+              <select
+                value={lang}
+                onChange={(e) => setLang(e.target.value as 'en'|'es')}
+                className="bg-transparent border border-gray-200 text-sm rounded-md px-2 py-1"
+                aria-label="Language"
+              >
+                <option value="en">EN</option>
+                <option value="es">ES</option>
+              </select>
+            </div>
 
             {/* User Menu */}
             <div className="relative group">

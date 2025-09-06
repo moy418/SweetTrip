@@ -345,3 +345,16 @@ Explore the full functionality including:
 - Mobile-responsive design
 
 *Note: This is a demo deployment. For production use, follow the deployment guide for your own server setup.*
+
+## 🔄 Recent updates
+
+These are the UI and UX improvements made recently (local dev changes):
+
+- Moved the animated video logo into its own centered "Video Showcase" section so it no longer floats over the hero.
+- Restored the video in the "Experience Sweet Trip" section and created a dedicated `CenteredVideo` section for a centred presentation.
+- Increased the number of floating emojis/candies in the hero for a livelier design (desktop & mobile tweaks).
+- Harmonized the top banners with the footer visual style (dark background, white text, shadow) for consistent header/footer UI.
+- Added a working theme toggle (light/dark) and language selector (EN/ES) in the header. Preferences persist in localStorage.
+- Minor fixes to JSX and responsive layout; verified builds with Vite.
+
+If you'd like these changes split into a separate feature branch and a PR instead of being pushed directly to `main`, tell me and I'll create it.

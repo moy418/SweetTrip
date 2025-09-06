@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Globe } from 'lucide-react'
-import { VideoLogo } from './video-logo'
 import React, { useEffect, useRef } from 'react'
 
 export function HeroSection() {
@@ -15,7 +14,7 @@ export function HeroSection() {
     if (!container) return
 
     const isMobile = window.matchMedia('(max-width: 768px)').matches
-    const TOTAL = isMobile ? 12 : 36 // más dulces en desktop, algo menos en móvil
+  const TOTAL = isMobile ? 20 : 60 // más dulces en desktop, algo menos en móvil
     const candySrcs = [
       '/sweetland-logo.jpeg',
       '/sweetlogo.jpeg',
@@ -49,7 +48,7 @@ export function HeroSection() {
   }, [])
 
   return (
-    <section className="relative bg-gradient-to-br from-pink-400 via-violet-500 to-indigo-700 text-white py-24 overflow-hidden">
+    <section className="relative bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-400 text-white py-20 overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0">
         {/* Subtle candy shapes */}
@@ -65,61 +64,46 @@ export function HeroSection() {
       </div>
 
       {/* Logo Background */}
-    <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 opacity-30 z-0">
+      <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 opacity-30 z-0">
         <Image
           src="/sweet-trip-logo.png"
           alt="Sweet Trip Logo"
-      width={420}
-      height={420}
+          width={520}
+          height={520}
           className="drop-shadow-2xl"
           priority
         />
       </div>
 
-      {/* Video Logo - Floating Animation */}
-      <div className="absolute top-1/4 right-10 opacity-20 z-0">
-        <VideoLogo
-          src="/sweet-trip-video-logo.mp4"
-          poster="/sweet-trip-logo.png"
-          size="large"
-          className="animate-float"
-        />
-      </div>
+  {/* Removed floating video - moved to its own section (VideoShowcase) below the hero */}
 
       {/* Floating candies layer */}
   <div className="floating-candies absolute inset-0 pointer-events-none" ref={candiesRef} aria-hidden="true" />
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-3xl mx-auto md:mx-0 text-left">
-          {/* Pill badge */}
-          <div className="mb-6">
-            <div className="inline-flex items-center gap-3 bg-white/10 text-white px-3 py-1 rounded-full text-sm">
-              <Globe className="h-4 w-4" />
-              <span className="font-medium">50+ Countries · 1,000+ Products</span>
-            </div>
-          </div>
+        <div className="max-w-4xl mx-auto text-center">
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight"
+            className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
           >
-              <span className="block">Discover <span className="text-yellow-300">Candy</span></span>
-              <motion.span
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="block text-white/95 mt-1"
-              >
-                from Around the World
-              </motion.span>
+            Discover Candy from
+            <motion.span
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300"
+            >
+              Around the World
+            </motion.span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-lg md:text-xl mb-8 text-white/85 max-w-3xl"
+            className="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto"
           >
             Explore exotic flavors and unique treats from every corner of the globe. 
             From Japanese Kit Kats to Korean snacks, embark on a sweet journey with Sweet Trip.
@@ -129,38 +113,23 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 justify-start"
+            className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Link
               href="/featured"
-              className="group inline-flex items-center gap-3 bg-gradient-to-r from-pink-500 to-violet-500 text-white px-6 py-3 rounded-full font-semibold text-lg shadow-2xl hover:scale-105 transform transition-transform"
+              className="group bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl hover:scale-105 transform"
             >
               <span>Shop Featured</span>
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
               href="/categories"
-              className="group inline-flex items-center gap-2 border border-white/20 text-white px-6 py-3 rounded-full font-semibold text-lg hover:bg-white/10 transition-all duration-300"
+              className="group border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl hover:scale-105 transform"
             >
               <Globe className="h-5 w-5" />
               <span>Explore Categories</span>
             </Link>
           </motion.div>
-          {/* Trust badges */}
-          <div className="mt-6 flex items-center gap-6 text-sm text-white/90">
-            <div className="inline-flex items-center gap-2">
-              <span className="w-3 h-3 bg-green-400 rounded-full" />
-              <span>Free Shipping $50+</span>
-            </div>
-            <div className="inline-flex items-center gap-2">
-              <span className="w-3 h-3 bg-blue-400 rounded-full" />
-              <span>100% Authentic</span>
-            </div>
-            <div className="inline-flex items-center gap-2">
-              <span className="w-3 h-3 bg-yellow-300 rounded-full" />
-              <span>4.8/5 Rating</span>
-            </div>
-          </div>
         </div>
       </div>
     </section>

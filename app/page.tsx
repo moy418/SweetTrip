@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { HeroSection } from '@/components/hero-section'
 import { TrustStrip } from '@/components/trust-strip'
 import { VideoShowcase } from '@/components/video-showcase'
+import { CenteredVideo } from '@/components/centered-video'
 import { FeaturedProducts } from '@/components/featured-products'
 import { CategoryGrid } from '@/components/category-grid'
 import { Testimonials } from '@/components/testimonials'
@@ -31,6 +32,8 @@ export default function HomePage() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <HeroSection />
+  {/* Centered Video Section (moved sweet-trip-video-logo.mp4 here) */}
+  <CenteredVideo />
       
       {/* Trust Strip */}
       <TrustStrip />
