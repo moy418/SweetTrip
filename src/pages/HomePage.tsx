@@ -29,12 +29,12 @@ export default function HomePage() {
       img.src = candySrcs[i % candySrcs.length]
       img.className = 'floating-candy'
       const size = Math.round(20 + Math.random() * 60)
-  img.style.width = `${size}px`
-  img.style.left = `${Math.random() * 90}%`
-  img.style.top = `${5 + Math.random() * 80}%`
-  img.style.animationDuration = `${6 + Math.random() * 10}s`
-  img.style.animationDelay = `${Math.random() * 6}s`
-  img.style.opacity = `${isMobile ? 0.45 + Math.random() * 0.35 : 0.6 + Math.random() * 0.4}`
+      img.style.width = `${size}px`
+      img.style.left = `${Math.random() * 90}%`
+      img.style.top = `${5 + Math.random() * 80}%`
+      img.style.animationDuration = `${6 + Math.random() * 10}s`
+      img.style.animationDelay = `${Math.random() * 6}s`
+      img.style.opacity = `${isMobile ? 0.45 + Math.random() * 0.35 : 0.6 + Math.random() * 0.4}`
       img.alt = 'sweet'
       img.setAttribute('aria-hidden', 'true')
       container.appendChild(img)

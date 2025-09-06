@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, User, Search, Menu, X, Heart } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -12,6 +12,7 @@ export default function Header() {
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isScrolled, setIsScrolled] = useState(false)
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,6 +40,14 @@ export default function Header() {
     localStorage.setItem('site-theme', theme)
   }, [theme])
 
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 60)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', onScroll)
+    }
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('scroll', onScroll) }
+  }, [])
+
   React.useEffect(() => {
     if (typeof window === 'undefined') return
     localStorage.setItem('site-lang', lang)
@@ -47,7 +56,7 @@ export default function Header() {
   const bannerText = lang === 'es' ? 'Envío gratis en pedidos sobre $60!' : 'Free shipping on orders over $60!'
 
   return (
-  <header className="sticky top-0 z-50 bg-gray-900 text-white shadow-lg">
+  <header className={`sticky top-0 z-50 bg-gray-900 text-white shadow-lg`}> 
       {/* Top Banner - match footer */}
     <div className="top-banner py-2 bg-gray-900 text-white">
         <div className="container mx-auto px-4 text-center text-sm text-white">
@@ -56,20 +65,20 @@ export default function Header() {
       </div>
 
       {/* Main Header */}
-      <div className="container mx-auto px-4 py-6">
+  <div className={`container mx-auto px-4 ${isScrolled ? 'py-2' : 'py-6'} transition-all` }>
           <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-4">
             <img 
               src="/sweet-trip-logo.png" 
               alt="Sweet Trip Logo" 
-              className="h-16 w-16 sm:h-20 sm:w-20 md:h-32 md:w-32 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className={`h-12 w-12 sm:h-16 sm:w-16 md:h-32 md:w-32 rounded-xl shadow-lg transition-all duration-300 ${isScrolled ? 'scale-90' : 'hover:scale-105 hover:shadow-xl'}`}
             />
             <div>
-              <h1 className="text-2xl sm:text-3xl md:text-3xl font-bold text-white">
+              <h1 className={`text-2xl sm:text-3xl md:text-3xl font-bold text-white transition-all ${isScrolled ? 'opacity-0 max-h-0 overflow-hidden' : 'opacity-100'}`}>
                 Sweet Trip
               </h1>
-              <p className="text-sm text-white/80 font-medium">Discover Candy from Around the World</p>
+              <p className={`text-sm text-white/80 font-medium transition-all ${isScrolled ? 'opacity-0 max-h-0 overflow-hidden' : 'opacity-100'}`}>Discover Candy from Around the World</p>
             </div>
           </Link>
 
