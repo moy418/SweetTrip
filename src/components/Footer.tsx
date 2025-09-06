@@ -13,7 +13,8 @@ export default function Footer() {
               <img 
                 src="/sweet-trip-logo.png" 
                 alt="Sweet Trip Logo" 
-                className="h-16 w-16 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                className="h-16 w-16 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 bg-transparent"
+                style={{ backgroundColor: 'transparent' }}
               />
               <span className="text-2xl font-bold">Sweet Trip</span>
             </div>

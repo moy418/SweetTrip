@@ -22,7 +22,7 @@ export default function HomePage() {
 
     const isMobile = window.matchMedia('(max-width: 768px)').matches
   const TOTAL = isMobile ? 12 : 48
-    const candySrcs = ['/sweetland-logo.jpeg', '/sweetlogo.jpeg', '/sweet-trip-logo.png']
+  const candySrcs = ['/sweetland-logo.jpeg', '/sweetlogo.jpeg']
 
     for (let i = 0; i < TOTAL; i++) {
       const img = document.createElement('img')

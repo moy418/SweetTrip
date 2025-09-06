@@ -18,7 +18,6 @@ export function HeroSection() {
     const candySrcs = [
       '/sweetland-logo.jpeg',
       '/sweetlogo.jpeg',
-      '/sweet-trip-logo.png',
       '/sweetlogo.jpeg',
       '/sweetland-logo.jpeg'
     ]
@@ -70,7 +69,8 @@ export function HeroSection() {
           alt="Sweet Trip Logo"
           width={520}
           height={520}
-          className="drop-shadow-2xl"
+          className="drop-shadow-2xl bg-transparent"
+          style={{ backgroundColor: 'transparent' }}
           priority
         />
       </div>

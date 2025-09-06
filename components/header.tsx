@@ -72,7 +72,8 @@ export function Header() {
                   alt="Sweet Trip Logo"
                   width={120}
                   height={120}
-                  className="rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105"
+                  className="rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 bg-transparent"
+                  style={{ backgroundColor: 'transparent' }}
                   priority
                 />
               </div>

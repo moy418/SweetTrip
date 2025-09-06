@@ -64,7 +64,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center items-center space-x-4">
-          <img src="/sweet-trip-logo.png" alt="Sweet Trip" className="h-20 w-20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" />
+          <img src="/sweet-trip-logo.png" alt="Sweet Trip" className="h-20 w-20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 bg-transparent" style={{ backgroundColor: 'transparent' }} />
           <span className="text-3xl font-bold text-blue-600">Sweet Trip</span>
         </Link>
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">

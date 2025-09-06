@@ -72,7 +72,8 @@ export default function Header() {
             <img 
               src="/sweet-trip-logo.png" 
               alt="Sweet Trip Logo" 
-              className={`h-12 w-12 sm:h-16 sm:w-16 md:h-32 md:w-32 rounded-xl shadow-lg transition-all duration-300 ${isScrolled ? 'scale-90' : 'hover:scale-105 hover:shadow-xl'}`}
+              className={`h-12 w-12 sm:h-16 sm:w-16 md:h-32 md:w-32 rounded-xl shadow-lg transition-all duration-300 ${isScrolled ? 'scale-90' : 'hover:scale-105 hover:shadow-xl' } bg-transparent`}
+              style={{ backgroundColor: 'transparent' }}
             />
             <div>
               <h1 className={`text-2xl sm:text-3xl md:text-3xl font-bold text-white transition-all ${isScrolled ? 'opacity-0 max-h-0 overflow-hidden' : 'opacity-100'}`}>
