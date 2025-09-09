@@ -4,47 +4,9 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Globe } from 'lucide-react'
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
 
 export function HeroSection() {
-  const candiesRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const container = candiesRef.current
-    if (!container) return
-
-    const isMobile = window.matchMedia('(max-width: 768px)').matches
-  const TOTAL = isMobile ? 20 : 60 // más dulces en desktop, algo menos en móvil
-    const candySrcs = [
-      '/sweetland-logo.jpeg',
-      '/sweetlogo.jpeg',
-      '/sweetlogo.jpeg',
-      '/sweetland-logo.jpeg'
-    ]
-
-    // Clear existing (HMR)
-    container.innerHTML = ''
-
-    for (let i = 0; i < TOTAL; i++) {
-      const img = document.createElement('img')
-      img.src = candySrcs[i % candySrcs.length]
-      img.className = 'floating-candy'
-      const size = Math.round(24 + Math.random() * 56) // 24-80px
-      img.style.width = `${size}px`
-      img.style.left = `${Math.random() * 90}%`
-      img.style.top = `${5 + Math.random() * 80}%`
-      img.style.animationDuration = `${7 + Math.random() * 12}s`
-      img.style.animationDelay = `${Math.random() * 6}s`
-      img.style.opacity = `${0.55 + Math.random() * 0.45}`
-      img.alt = 'sweet'
-      img.setAttribute('aria-hidden', 'true')
-      container.appendChild(img)
-    }
-
-    return () => {
-      container.innerHTML = ''
-    }
-  }, [])
 
   return (
     <section className="relative bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-400 text-white py-20 overflow-hidden">
@@ -76,9 +38,6 @@ export function HeroSection() {
       </div>
 
   {/* Removed floating video - moved to its own section (VideoShowcase) below the hero */}
-
-      {/* Floating candies layer */}
-  <div className="floating-candies absolute inset-0 pointer-events-none" ref={candiesRef} aria-hidden="true" />
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">

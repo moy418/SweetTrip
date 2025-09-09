@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const { amount, currency = 'usd', cartItems, customerEmail, shippingAddress, billingAddress, couponCode } = await req.json();
+        const { amount, currency = 'usd', cartItems, customerEmail, shippingAddress, billingAddress } = await req.json();
 
         console.log('Payment intent request received:', { amount, currency, cartItemsCount: cartItems?.length });
 
@@ -79,8 +79,8 @@ Deno.serve(async (req) => {
             }
         }
 
-        // Generate order number
-        const orderNumber = `ST-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+        // Generate unique order number
+        const orderNumber = 'ST-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5).toUpperCase();
 
         // Prepare Stripe payment intent data
         const stripeParams = new URLSearchParams();
@@ -92,7 +92,6 @@ Deno.serve(async (req) => {
         stripeParams.append('metadata[cart_items_count]', cartItems.length.toString());
         stripeParams.append('metadata[total_items]', cartItems.reduce((sum, item) => sum + item.quantity, 0).toString());
         stripeParams.append('metadata[user_id]', userId || '');
-        stripeParams.append('metadata[coupon_code]', couponCode || '');
 
         // Create payment intent with Stripe
         const stripeResponse = await fetch('https://api.stripe.com/v1/payment_intents', {
@@ -115,18 +114,22 @@ Deno.serve(async (req) => {
         const paymentIntent = await stripeResponse.json();
         console.log('Payment intent created successfully:', paymentIntent.id);
 
+        // Calculate shipping cost
+        const shippingCost = amount >= 60 ? 0 : 5.99;
+        const subtotal = amount - shippingCost;
+
         // Create order record in database
         const orderData = {
             user_id: userId,
             order_number: orderNumber,
             stripe_payment_intent_id: paymentIntent.id,
-            status: 'pending_payment',
+            status: 'pending',
             total_amount: amount,
             currency: currency,
+            shipping_cost: shippingCost,
             shipping_address: shippingAddress || null,
             billing_address: billingAddress || null,
             customer_email: customerEmail || null,
-            coupon_code: couponCode || null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
@@ -174,7 +177,8 @@ Deno.serve(async (req) => {
             quantity: item.quantity,
             price_at_time: item.price,
             product_name: item.product_name,
-            product_image_url: item.product_image_url || null,
+            product_image_url: item.product_image_url || (item.product_images && item.product_images.length > 0 ? item.product_images[0] : null),
+            country_code: item.origin_country || null,
             created_at: new Date().toISOString()
         }));
 
@@ -199,27 +203,6 @@ Deno.serve(async (req) => {
             console.log('Order items created successfully');
         }
 
-        // Reserve inventory for each item
-        for (const item of cartItems) {
-            try {
-                await fetch(`${supabaseUrl}/functions/v1/inventory-management`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${serviceRoleKey}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'reserve',
-                        productId: item.product_id,
-                        quantity: item.quantity,
-                        orderId: orderId
-                    })
-                });
-            } catch (error) {
-                console.error(`Failed to reserve inventory for product ${item.product_id}:`, error);
-            }
-        }
-
         const result = {
             data: {
                 clientSecret: paymentIntent.client_secret,
@@ -228,7 +211,7 @@ Deno.serve(async (req) => {
                 orderNumber: orderNumber,
                 amount: amount,
                 currency: currency,
-                status: 'pending_payment'
+                status: 'pending'
             }
         };
 

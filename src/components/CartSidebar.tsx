@@ -56,7 +56,7 @@ export default function CartSidebar() {
                   {/* Product Image */}
                   <div className="flex-shrink-0">
                     <img
-                      src={item.product.image_urls?.[0] || '/api/placeholder/80/80'}
+                      src={item.product.image_urls?.[0] || '/candy-fallback.jpg'}
                       alt={item.product.name}
                       className="w-16 h-16 object-cover rounded-lg"
                     />

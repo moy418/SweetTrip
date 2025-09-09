@@ -12,6 +12,7 @@ import ProductListPage from './pages/ProductListPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
+import CheckoutSuccessPage from './pages/CheckoutSuccessPage'
 import AccountPage from './pages/AccountPage'
 import OrdersPage from './pages/OrdersPage'
 import WishlistPage from './pages/WishlistPage'
@@ -19,6 +20,21 @@ import CategoryPage from './pages/CategoryPage'
 import SearchPage from './pages/SearchPage'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import NotFoundPage from './pages/NotFoundPage'
+
+// New Navigation Pages
+import CategoriesPage from './pages/CategoriesPage'
+import RegionsPage from './pages/RegionsPage'
+import CountriesListPage from './pages/CountriesListPage'
+import AboutPage from './pages/AboutPage'
+import ContactPage from './pages/ContactPage'
+
+// World Cup 2026 Pages
+import WorldCup2026Page from './pages/WorldCup2026Page'
+import CountriesPage from './pages/CountriesPage'
+import PredictionsPage from './pages/PredictionsPage'
+import LeaderboardPage from './pages/LeaderboardPage'
+import MyCollectionPage from './pages/MyCollectionPage'
+import CulturalStoriesPage from './pages/CulturalStoriesPage'
 
 // Create a client
 const queryClient = new QueryClient({
@@ -46,11 +62,31 @@ function App() {
               <Route path="/search" element={<SearchPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/orders" element={<OrdersPage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/featured" element={<ProductListPage />} />
               <Route path="/new-arrivals" element={<ProductListPage />} />
+              
+              {/* New Navigation Pages */}
+              <Route path="/categories" element={<CategoriesPage />} />
+              <Route path="/regions" element={<RegionsPage />} />
+              <Route path="/region/:slug" element={<ProductListPage />} />
+              <Route path="/countries" element={<CountriesListPage />} />
+              <Route path="/country/:code" element={<ProductListPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              
+              {/* World Cup 2026 Routes */}
+              <Route path="/worldcup2026" element={<WorldCup2026Page />} />
+              <Route path="/worldcup2026/countries" element={<CountriesPage />} />
+              <Route path="/worldcup2026/predictions" element={<PredictionsPage />} />
+              <Route path="/worldcup2026/leaderboard" element={<LeaderboardPage />} />
+              <Route path="/worldcup2026/my-collection" element={<MyCollectionPage />} />
+              <Route path="/stories" element={<CulturalStoriesPage />} />
+              <Route path="/stories/:type/:id" element={<CulturalStoriesPage />} />
+              
               <Route path="/admin/*" element={<AdminDashboard />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>

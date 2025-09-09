@@ -4,6 +4,7 @@ import { ShoppingCart, Heart, Star } from 'lucide-react'
 import { Product } from '../lib/supabase'
 import { useCartStore } from '../store/cartStore'
 import { useAuth } from '../contexts/AuthContext'
+import LazyImage from './LazyImage'
 import toast from 'react-hot-toast'
 
 interface ProductCardProps {
@@ -63,18 +64,38 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   }
 
+  const getCountryFlag = (country: string) => {
+    const flags: { [key: string]: string } = {
+      'USA': '🇺🇸', 'MEX': '🇲🇽', 'CAN': '🇨🇦', 'ARG': '🇦🇷', 'BRA': '🇧🇷',
+      'FRA': '🇫🇷', 'GER': '🇩🇪', 'ESP': '🇪🇸', 'ENG': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'JPN': '🇯🇵',
+      'KOR': '🇰🇷', 'CRO': '🇭🇷', 'POR': '🇵🇹', 'NED': '🇳🇱', 'ITA': '🇮🇹'
+    }
+    return flags[country] || '🌍'
+  }
+
   return (
     <Link 
       to={`/product/${product.slug}`}
-      className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100"
+      className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 will-change-transform"
     >
       <div className="relative">
-        {/* Product Image */}
-        <div className="aspect-square bg-gray-100 overflow-hidden">
-          <img
-            src={product.image_urls?.[0] || '/api/placeholder/300/300'}
+        {/* Product Image with Lazy Loading */}
+        <div className="aspect-square bg-gray-100 overflow-hidden relative">
+          <LazyImage
+            src={product.image_urls?.[0] || '/candy-fallback.jpg'}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 will-change-transform"
+            placeholder="🍭"
+            fallback={
+              <div className="w-full h-full bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-4xl mb-2">
+                    {product.origin_country ? getCountryFlag(product.origin_country) : '🌍'}
+                  </div>
+                  <div className="text-6xl opacity-20">🍭</div>
+                </div>
+              </div>
+            }
           />
         </div>
         
@@ -102,7 +123,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <button
             onClick={handleAddToWishlist}
             disabled={isAddingToWishlist}
-            className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
+            className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors will-change-transform"
           >
             <Heart className="h-4 w-4 text-gray-600" />
           </button>
@@ -119,8 +140,9 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           )}
           {product.origin_country && (
-            <span className="text-xs text-gray-500">
-              From {product.origin_country}
+            <span className="text-xs text-gray-500 flex items-center space-x-1">
+              <span>{getCountryFlag(product.origin_country)}</span>
+              <span>From {product.origin_country}</span>
             </span>
           )}
         </div>
@@ -166,7 +188,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <button
             onClick={handleAddToCart}
             disabled={isAddingToCart || product.stock_quantity === 0}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-2"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-2 will-change-transform"
           >
             <ShoppingCart className="h-4 w-4" />
             <span className="hidden sm:inline">

@@ -9,7 +9,7 @@ export default function NotFoundPage() {
         {/* Sweet Trip Logo */}
         <div className="mb-8">
           <img 
-            src="/sweetland-logo.jpeg" 
+            src="/sweet-trip-logo.png" 
             alt="Sweet Trip" 
             className="h-20 w-auto mx-auto rounded-lg"
           />

@@ -64,7 +64,7 @@ export default function CartPage() {
                     {/* Product Image */}
                     <Link to={`/product/${item.product.slug}`} className="flex-shrink-0">
                       <img
-                        src={item.product.image_urls?.[0] || '/api/placeholder/120/120'}
+                        src={item.product.image_urls?.[0] || '/candy-fallback.jpg'}
                         alt={item.product.name}
                         className="w-20 h-20 object-cover rounded-lg"
                       />

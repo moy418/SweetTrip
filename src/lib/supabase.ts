@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://boklgnsennmynedivddb.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJva2xnbnNlbm5teW5lZGl2ZGRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1NzU3MDEsImV4cCI6MjA3MjE1MTcwMX0.s5AU5NsxYZ6Yz9dWbRBA0_3gURiyDBTp8hiNxGhOsPc'
+const supabaseUrl = 'https://pmqcegwfucfbwwmwumkk.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtcWNlZ3dmdWNmYnd3bXd1bWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNTc3NzMsImV4cCI6MjA3MjkzMzc3M30.1oXas_KE7PBq6GyjOkV9lFZaAqQZGlE-8YLCSNgnDjc'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
@@ -103,4 +103,103 @@ export interface Coupon {
   is_active: boolean
   created_at: string
   updated_at: string
+}
+
+// World Cup 2026 Types
+export interface Country {
+  id: number
+  country_code: string
+  country_name: string
+  flag_emoji: string
+  continent: string
+  fifa_ranking: number
+  traditional_candy: string
+  candy_description: string
+  cultural_background: string
+  flag_colors: string[]
+  capital_city: string
+  created_at: string
+}
+
+export interface Match {
+  id: number
+  match_number: number
+  home_team_code: string
+  away_team_code: string
+  match_date: string
+  venue: string
+  stage: string
+  home_score: number | null
+  away_score: number | null
+  status: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Prediction {
+  id: number
+  user_id: string
+  match_id: number
+  predicted_home_score: number
+  predicted_away_score: number
+  points_earned: number
+  is_correct: boolean | null
+  prediction_type: string
+  created_at: string
+  updated_at: string
+}
+
+export interface UserAchievement {
+  id: number
+  user_id: string
+  achievement_type: string
+  achievement_name: string
+  achievement_description: string
+  badge_image_url: string | null
+  points_awarded: number
+  earned_at: string
+  metadata: any
+}
+
+export interface UserCountryCollection {
+  id: number
+  user_id: string
+  country_code: string
+  products_purchased: number
+  first_purchase_date: string | null
+  total_spent: number
+  collection_complete: boolean
+  badge_earned: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CulturalStory {
+  id: number
+  title: string
+  content: string
+  story_type: string
+  related_country_code: string | null
+  related_product_id: number | null
+  author: string
+  publish_date: string
+  is_featured: boolean
+  image_url: string | null
+  tags: string[]
+  reading_time: number
+  created_at: string
+  updated_at: string
+}
+
+export interface Notification {
+  id: number
+  user_id: string
+  notification_type: string
+  title: string
+  message: string
+  data: any
+  is_read: boolean
+  is_sent: boolean
+  scheduled_for: string | null
+  created_at: string
 }

@@ -1,300 +1,399 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Search, ShoppingCart, Heart, User, Menu, X, Sun, Moon } from 'lucide-react'
-import { useAuth } from '@/contexts/auth-context'
-import { useCartStore } from '@/store/cart-store'
-import { CartDrawer } from './cart-drawer'
-import { SearchAutocomplete } from './search-autocomplete'
+import { ShoppingCart, User, Search, Menu, X, Heart, Trophy, Globe2, Target, Star, TrendingUp, ChevronDown, Calendar, Flag } from 'lucide-react'
+
+interface Category {
+  id: string
+  name: string
+  slug: string
+}
+
+interface Region {
+  id: string
+  name: string
+  slug: string
+}
+
+interface Country {
+  id: string
+  country_name: string
+  country_code: string
+  flag_emoji: string
+}
 
 export function Header() {
-  const { user, signOut } = useAuth()
-  const { items } = useCartStore()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [isScrolled, setIsScrolled] = useState(false)
-  const [isCartOpen, setIsCartOpen] = useState(false)
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [theme, setTheme] = useState<'light'|'dark'>(() => (typeof window !== 'undefined' && (localStorage.getItem('site-theme') as 'light'|'dark')) || 'light')
-  const [lang, setLang] = useState<'en'|'es'>(() => (typeof window !== 'undefined' && (localStorage.getItem('site-lang') as 'en'|'es')) || 'en')
+  const [isScrollingDown, setIsScrollingDown] = useState(false)
+  const [lastScrollY, setLastScrollY] = useState(0)
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
+  const [isRegionsOpen, setIsRegionsOpen] = useState(false)
+  const [isCountriesOpen, setIsCountriesOpen] = useState(false)
 
-  const cartItemsCount = items.reduce((total, item) => total + item.quantity, 0)
-
+  // Handle scroll behavior
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
+      const currentScrollY = window.scrollY
+      const scrollThreshold = 50
+      
+      setIsScrolled(currentScrollY > scrollThreshold)
+      setIsScrollingDown(currentScrollY > lastScrollY && currentScrollY > scrollThreshold)
+      setLastScrollY(currentScrollY)
     }
-    window.addEventListener('scroll', handleScroll)
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
+  }, [lastScrollY])
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (target.closest('.dropdown-container')) {
+        return
+      }
+      setIsCategoriesOpen(false)
+      setIsRegionsOpen(false)
+      setIsCountriesOpen(false)
+    }
+    
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
   }, [])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-    localStorage.setItem('site-theme', theme)
-  }, [theme])
+  // Auto-close dropdown after delay when mouse leaves both trigger and dropdown
+  const createHoverHandlers = (setOpenState: (open: boolean) => void) => {
+    let timeoutId: NodeJS.Timeout | null = null
+    
+    const handleMouseEnter = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
+      setOpenState(true)
+    }
+    
+    const handleMouseLeave = () => {
+      timeoutId = setTimeout(() => {
+        setOpenState(false)
+      }, 150)
+    }
+    
+    return { handleMouseEnter, handleMouseLeave }
+  }
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    localStorage.setItem('site-lang', lang)
-  }, [lang])
-
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-    } catch (error) {
-      console.error('Error signing out:', error)
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      // Navigate to search page
+      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`
+      setSearchQuery('')
     }
   }
 
-  const searchPlaceholder = lang === 'es' ? 'Buscar dulces exóticos...' : 'Search for exotic candies...'
+  // Sample data for dropdowns - in production, fetch from API
+  const categories = [
+    { id: '1', name: 'Chocolate Bars', slug: 'chocolate-bars' },
+    { id: '2', name: 'Cookies & Biscuits', slug: 'cookies-biscuits' },
+    { id: '3', name: 'Sodas & Drinks', slug: 'sodas-drinks' },
+    { id: '4', name: 'Chips & Snacks', slug: 'chips-snacks' },
+    { id: '5', name: 'Spicy Treats', slug: 'spicy-treats' },
+    { id: '6', name: 'Gummies & Jellies', slug: 'gummies-jellies' },
+  ]
+
+  const regions = [
+    { id: '1', name: 'South American Delights', slug: 'south-american-delights' },
+    { id: '2', name: 'European Classics', slug: 'european-classics' },
+    { id: '3', name: 'North American Favorites', slug: 'north-american-favorites' },
+    { id: '4', name: 'Asian Wonders', slug: 'asian-wonders' },
+    { id: '5', name: 'African Treasures', slug: 'african-treasures' },
+  ]
+
+  const countries = [
+    { id: '1', country_name: 'Mexico', country_code: 'MX', flag_emoji: '🇲🇽' },
+    { id: '2', country_name: 'Japan', country_code: 'JP', flag_emoji: '🇯🇵' },
+    { id: '3', country_name: 'China', country_code: 'CN', flag_emoji: '🇨🇳' },
+    { id: '4', country_name: 'South Korea', country_code: 'KR', flag_emoji: '🇰🇷' },
+    { id: '5', country_name: 'United States', country_code: 'US', flag_emoji: '🇺🇸' },
+    { id: '6', country_name: 'Canada', country_code: 'CA', flag_emoji: '🇨🇦' },
+    { id: '7', country_name: 'Argentina', country_code: 'AR', flag_emoji: '🇦🇷' },
+    { id: '8', country_name: 'France', country_code: 'FR', flag_emoji: '🇫🇷' },
+    { id: '9', country_name: 'Spain', country_code: 'ES', flag_emoji: '🇪🇸' },
+    { id: '10', country_name: 'Italy', country_code: 'IT', flag_emoji: '🇮🇹' },
+    { id: '11', country_name: 'England', country_code: 'GB', flag_emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  ]
 
   return (
-    <>
-      {/* Top Banner */}
-        {/* Top Banner - match footer style */}
-        <div className="top-banner py-2 bg-gray-900 text-white">
-          <div className="container mx-auto px-4 text-center text-sm text-white">
-            <span className="font-medium">{lang === 'es' ? 'Envío gratis en pedidos sobre $60!' : 'Free shipping on orders over $60!'}</span>
-          </div>
+    <header className={`fixed top-0 left-0 right-0 z-50 bg-gray-900 text-white shadow-lg transition-transform duration-300 ${
+      isScrollingDown && isScrolled ? '-translate-y-full' : 'translate-y-0'
+    }`}>
+      
+      {/* World Cup 2026 Banner */}
+      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-white py-2 px-4 text-center relative overflow-hidden">
+        <div className="flex items-center justify-center space-x-2 relative z-10">
+          <Trophy className="w-5 h-5 text-yellow-300 animate-bounce" />
+          <span className="text-sm font-medium">
+            🏆 World Cup 2026 Collection - Coming Soon! 
+          </span>
+          <button className="bg-yellow-500 text-black px-3 py-1 rounded text-xs font-bold hover:bg-yellow-400 transition-colors ml-2">
+            PREVIEW NOW
+          </button>
         </div>
+      </div>
 
       {/* Main Header */}
-      <header className="sticky top-0 z-50 bg-gray-900 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link href="/" className="flex items-center space-x-4 group">
-              <div className="relative">
-                <Image
-                  src="/sweet-trip-logo.png"
-                  alt="Sweet Trip Logo"
-                  width={120}
-                  height={120}
-                  className="rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 bg-transparent"
-                  style={{ backgroundColor: 'transparent' }}
-                  priority
-                />
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                  Sweet Trip
-                </h1>
-                    <p className="text-sm text-white/90 font-medium">{lang === 'es' ? 'Descubre dulces de todo el mundo' : 'Discover Candy from Around the World'}</p>
-              </div>
+      <div className={`container mx-auto px-4 ${isScrolled ? 'py-2' : 'py-6'} transition-all`}>
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-3">
+            <Image 
+              src="/sweet-trip-logo.png" 
+              alt="Sweet Trip Logo" 
+              width={200}
+              height={200}
+              className={`transition-all duration-300 bg-transparent object-contain ${
+                isScrolled 
+                  ? 'h-14 w-14 sm:h-16 sm:w-16' 
+                  : 'h-16 w-16 sm:h-20 sm:w-20 md:h-40 md:w-40 lg:h-48 lg:w-48 hover:scale-105'
+              }`}
+              style={{ backgroundColor: 'transparent' }}
+            />
+            <div className={`transition-all duration-300 ${
+              isScrolled ? 'transform scale-75 origin-left' : ''
+            }`}>
+              <h1 className={`font-bold text-white transition-all duration-300 ${
+                isScrolled 
+                  ? 'text-lg sm:text-xl' 
+                  : 'text-2xl sm:text-3xl md:text-3xl'
+              }`}>
+                Sweet Trip
+              </h1>
+              <p className={`text-white/80 font-medium transition-all duration-300 ${
+                isScrolled 
+                  ? 'text-xs opacity-70' 
+                  : 'text-sm opacity-100'
+              }`}>Discover Candy from Around the World</p>
+            </div>
+          </Link>
+
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className={`hidden md:flex flex-1 mx-8 transition-all duration-300 ${
+            isScrolled ? 'max-w-md' : 'max-w-lg'
+          }`}>
+            <div className="relative w-full">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for your favorite treats..."
+                className="w-full px-4 py-2 pr-12 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
+          </form>
+
+          {/* Right Side Actions */}
+          <div className="flex items-center space-x-4">
+            {/* User Menu */}
+            <Link href="/login" className="hidden sm:flex items-center space-x-2 text-gray-300 hover:text-white transition-colors">
+              <User className="w-5 h-5" />
+              <span className="text-sm">Login</span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-8">
-              <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
-                Home
-              </Link>
-              <Link href="/categories" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
-                Categories
-              </Link>
-              <Link href="/products" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
-                Products
-              </Link>
-              <Link href="/featured" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
-                Featured
-              </Link>
-            </nav>
+            {/* Shopping Cart */}
+            <button className="relative flex items-center space-x-2 text-gray-300 hover:text-white transition-colors">
+              <ShoppingCart className="w-5 h-5" />
+              <span className="hidden sm:inline text-sm">Cart</span>
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                0
+              </span>
+            </button>
 
-            {/* Search Bar */}
-            <div className="hidden md:flex flex-1 max-w-lg mx-8">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            {/* Mobile Menu Toggle */}
+            <button 
+              className="md:hidden p-2 text-gray-300 hover:text-white transition-colors"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Main Navigation */}
+        <nav className={`hidden md:flex items-center justify-center mt-4 space-x-8 ${
+          isScrolled ? 'mt-2' : 'mt-4'
+        } transition-all`}>
+          
+          {/* Home */}
+          <Link href="/" className="text-white hover:text-blue-300 transition-colors font-medium">
+            Home
+          </Link>
+
+          {/* World Cup 2026 */}
+          <Link href="/world-cup-2026" className="text-white hover:text-blue-300 transition-colors font-medium flex items-center space-x-1">
+            <Trophy className="w-4 h-4" />
+            <span>World Cup 2026</span>
+            <span className="bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">Coming Soon</span>
+          </Link>
+
+          {/* Categories Dropdown */}
+          <div 
+            className="relative dropdown-container"
+            {...createHoverHandlers(setIsCategoriesOpen)}
+          >
+            <button 
+              className="text-white hover:text-blue-300 transition-colors font-medium flex items-center space-x-1"
+              onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
+            >
+              <span>Categories</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {isCategoriesOpen && (
+              <div className="absolute top-full left-0 mt-2 w-64 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-2 z-50">
+                {categories.map((category) => (
+                  <Link
+                    key={category.id}
+                    href={`/categories/${category.slug}`}
+                    className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Regions Dropdown */}
+          <div 
+            className="relative dropdown-container"
+            {...createHoverHandlers(setIsRegionsOpen)}
+          >
+            <button 
+              className="text-white hover:text-blue-300 transition-colors font-medium flex items-center space-x-1"
+              onClick={() => setIsRegionsOpen(!isRegionsOpen)}
+            >
+              <span>Regions</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${isRegionsOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {isRegionsOpen && (
+              <div className="absolute top-full left-0 mt-2 w-64 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-2 z-50">
+                {regions.map((region) => (
+                  <Link
+                    key={region.id}
+                    href={`/regions/${region.slug}`}
+                    className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
+                  >
+                    {region.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Countries Dropdown */}
+          <div 
+            className="relative dropdown-container"
+            {...createHoverHandlers(setIsCountriesOpen)}
+          >
+            <button 
+              className="text-white hover:text-blue-300 transition-colors font-medium flex items-center space-x-1"
+              onClick={() => setIsCountriesOpen(!isCountriesOpen)}
+            >
+              <span>Countries</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${isCountriesOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {isCountriesOpen && (
+              <div className="absolute top-full left-0 mt-2 w-72 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-2 z-50 max-h-96 overflow-y-auto">
+                {countries.map((country) => (
+                  <Link
+                    key={country.id}
+                    href={`/countries/${country.country_code.toLowerCase()}`}
+                    className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors flex items-center space-x-2"
+                  >
+                    <span className="text-lg">{country.flag_emoji}</span>
+                    <span>{country.country_name}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Featured */}
+          <Link href="/featured" className="text-white hover:text-blue-300 transition-colors font-medium flex items-center space-x-1">
+            <Star className="w-4 h-4" />
+            <span>Featured</span>
+          </Link>
+
+          {/* New Arrivals */}
+          <Link href="/new-arrivals" className="text-white hover:text-blue-300 transition-colors font-medium flex items-center space-x-1">
+            <TrendingUp className="w-4 h-4" />
+            <span>New Arrivals</span>
+          </Link>
+
+          {/* About */}
+          <Link href="/about" className="text-white hover:text-blue-300 transition-colors font-medium">
+            About
+          </Link>
+
+          {/* Contact */}
+          <Link href="/contact" className="text-white hover:text-blue-300 transition-colors font-medium">
+            Contact
+          </Link>
+        </nav>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden mt-4 bg-gray-800 rounded-lg p-4">
+            {/* Mobile Search */}
+            <form onSubmit={handleSearch} className="mb-4">
+              <div className="relative">
                 <input
                   type="text"
-                  placeholder={searchPlaceholder}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
-                  onFocus={() => setIsSearchOpen(true)}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search treats..."
+                  className="w-full px-4 py-2 pr-12 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                {isSearchOpen && (
-                  <SearchAutocomplete onClose={() => setIsSearchOpen(false)} />
-                )}
-              </div>
-            </div>
-
-            {/* Right Side Actions */}
-            <div className="flex items-center space-x-4">
-              {/* Mobile Search */}
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                className="md:hidden p-2 text-gray-600 hover:text-blue-600 transition-colors"
-                aria-label="Search"
-              >
-                <Search className="h-6 w-6" />
-              </button>
-
-              {/* Wishlist */}
-              <Link
-                href="/wishlist"
-                className="p-2 text-gray-600 hover:text-blue-600 transition-colors relative"
-                aria-label="Wishlist"
-              >
-                <Heart className="h-6 w-6" />
-              </Link>
-
-              {/* Cart */}
-              <button
-                onClick={() => setIsCartOpen(true)}
-                className="p-2 text-gray-600 hover:text-blue-600 transition-colors relative"
-                aria-label="Shopping cart"
-              >
-                <ShoppingCart className="h-6 w-6" />
-                {cartItemsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                    {cartItemsCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Theme toggle */}
-              <button
-                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                className="p-2 text-white/90 hover:text-white transition-colors"
-                aria-label="Toggle theme"
-                title={theme === 'light' ? (lang === 'es' ? 'Modo oscuro' : 'Dark mode') : (lang === 'es' ? 'Modo claro' : 'Light mode')}
-              >
-                {theme === 'light' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
-
-              {/* Language selector */}
-              <div className="relative">
-                <select
-                  value={lang}
-                  onChange={(e) => setLang(e.target.value as 'en'|'es')}
-                  className="bg-transparent border border-white/30 text-sm rounded-md px-2 py-1 text-white"
-                  aria-label="Language"
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors"
                 >
-                  <option value="en">EN</option>
-                  <option value="es">ES</option>
-                </select>
+                  <Search className="w-4 h-4" />
+                </button>
               </div>
+            </form>
 
-              {/* User Menu */}
-              {user ? (
-                <div className="relative group">
-                  <button className="p-2 text-gray-600 hover:text-blue-600 transition-colors" aria-label="User menu">
-                    <User className="h-6 w-6" />
-                  </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                    <div className="py-2">
-                      <Link href="/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                        My Account
-                      </Link>
-                      <Link href="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                        My Orders
-                      </Link>
-                      <button
-                        onClick={handleSignOut}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <Link
-                  href="/login"
-                  className="btn-primary text-sm px-4 py-2"
-                >
-                  Sign In
-                </Link>
-              )}
-
-              {/* Mobile Menu */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden p-2 text-gray-600 hover:text-blue-600 transition-colors"
-                aria-label="Menu"
-              >
-                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </button>
-            </div>
+            {/* Mobile Navigation Links */}
+            <nav className="space-y-2">
+              <Link href="/" className="block py-2 text-white hover:text-blue-300 transition-colors">Home</Link>
+              <Link href="/world-cup-2026" className="block py-2 text-white hover:text-blue-300 transition-colors">World Cup 2026</Link>
+              <Link href="/categories" className="block py-2 text-white hover:text-blue-300 transition-colors">Categories</Link>
+              <Link href="/regions" className="block py-2 text-white hover:text-blue-300 transition-colors">Regions</Link>
+              <Link href="/countries" className="block py-2 text-white hover:text-blue-300 transition-colors">Countries</Link>
+              <Link href="/featured" className="block py-2 text-white hover:text-blue-300 transition-colors">Featured</Link>
+              <Link href="/new-arrivals" className="block py-2 text-white hover:text-blue-300 transition-colors">New Arrivals</Link>
+              <Link href="/about" className="block py-2 text-white hover:text-blue-300 transition-colors">About</Link>
+              <Link href="/contact" className="block py-2 text-white hover:text-blue-300 transition-colors">Contact</Link>
+              
+              <div className="pt-4 border-t border-gray-700">
+                <Link href="/login" className="block py-2 text-white hover:text-blue-300 transition-colors">Login</Link>
+              </div>
+            </nav>
           </div>
-
-          {/* Mobile Menu */}
-          {isMobileMenuOpen && (
-            <div className="lg:hidden mt-4 pb-4 border-t border-gray-200">
-              <nav className="flex flex-col space-y-2 pt-4">
-                <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium py-2">
-                  Home
-                </Link>
-                <Link href="/categories" className="text-gray-700 hover:text-blue-600 font-medium py-2">
-                  Categories
-                </Link>
-                <Link href="/products" className="text-gray-700 hover:text-blue-600 font-medium py-2">
-                  Products
-                </Link>
-                <Link href="/featured" className="text-gray-700 hover:text-blue-600 font-medium py-2">
-                  Featured
-                </Link>
-              </nav>
-            </div>
-          )}
-        </div>
-
-        {/* Category Chips */}
-        <div className="border-t border-gray-100 bg-gray-50">
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center space-x-4 overflow-x-auto scrollbar-hide snap-x">
-              <div className="flex space-x-3 whitespace-nowrap snap-start">
-                <Link
-                  href="/category/japanese"
-                  className="flex items-center space-x-2 bg-white px-4 py-2 rounded-full text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors border border-gray-200"
-                >
-                  <span>🇯🇵</span>
-                  <span>Japanese</span>
-                </Link>
-                <Link
-                  href="/category/korean"
-                  className="flex items-center space-x-2 bg-white px-4 py-2 rounded-full text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors border border-gray-200"
-                >
-                  <span>🇰🇷</span>
-                  <span>Korean</span>
-                </Link>
-                <Link
-                  href="/category/european"
-                  className="flex items-center space-x-2 bg-white px-4 py-2 rounded-full text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors border border-gray-200"
-                >
-                  <span>🇪🇺</span>
-                  <span>European</span>
-                </Link>
-                <Link
-                  href="/category/american"
-                  className="flex items-center space-x-2 bg-white px-4 py-2 rounded-full text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors border border-gray-200"
-                >
-                  <span>🇺🇸</span>
-                  <span>American</span>
-                </Link>
-                <Link
-                  href="/category/chocolate"
-                  className="flex items-center space-x-2 bg-white px-4 py-2 rounded-full text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors border border-gray-200"
-                >
-                  <span>🍫</span>
-                  <span>Chocolate</span>
-                </Link>
-                <Link
-                  href="/category/gummies"
-                  className="flex items-center space-x-2 bg-white px-4 py-2 rounded-full text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors border border-gray-200"
-                >
-                  <span>🍬</span>
-                  <span>Gummies</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Cart Drawer */}
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-    </>
+        )}
+      </div>
+    </header>
   )
 }
-
-

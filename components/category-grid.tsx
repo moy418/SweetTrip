@@ -32,10 +32,10 @@ export function CategoryGrid() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Explore by Region
+              Browse Categories
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Each region offers its own unique candy culture and flavors. Discover what makes each destination special.
+              Explore our carefully curated categories featuring unique candy collections from around the world.
             </p>
           </div>
           
@@ -60,10 +60,10 @@ export function CategoryGrid() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Explore by Region
+            Browse Categories
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Each region offers its own unique candy culture and flavors. Discover what makes each destination special.
+            Explore our carefully curated categories featuring unique candy collections from around the world.
           </p>
         </div>
         

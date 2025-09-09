@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams, useParams } from 'react-router-dom'
 import { Filter, Grid, List, SortAsc } from 'lucide-react'
 import { supabase, Product } from '../lib/supabase'
 import ProductGrid from '../components/ProductGrid'
@@ -17,9 +17,12 @@ export default function ProductListPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const location = useLocation()
   const [searchParams] = useSearchParams()
+  const params = useParams()
   
   const isFeatured = location.pathname.includes('featured')
   const isNewArrivals = location.pathname.includes('new-arrivals')
+  const isRegionPage = location.pathname.includes('/region/')
+  const isCountryPage = location.pathname.includes('/country/')
 
   useEffect(() => {
     loadProducts()
@@ -44,6 +47,30 @@ export default function ProductListPage() {
         const thirtyDaysAgo = new Date()
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
         query = query.gte('created_at', thirtyDaysAgo.toISOString())
+      }
+      
+      // Apply region/country filtering
+      if (isRegionPage && params.slug) {
+        // Get countries for this region
+        const { data: countries } = await supabase
+          .from('countries')
+          .select('country_code')
+          .eq('region_id', 
+            await supabase
+              .from('regions')
+              .select('id')
+              .eq('slug', params.slug)
+              .single()
+              .then(({ data }) => data?.id)
+          )
+        
+        if (countries && countries.length > 0) {
+          const countryCodes = countries.map(c => c.country_code)
+          query = query.in('origin_country', countryCodes)
+        }
+      } else if (isCountryPage && params.code) {
+        // Filter by specific country
+        query = query.eq('origin_country', params.code.toUpperCase())
       }
       
       // Apply search filter
@@ -92,6 +119,16 @@ export default function ProductListPage() {
   const getPageTitle = () => {
     if (isFeatured) return 'Featured Products'
     if (isNewArrivals) return 'New Arrivals'
+    if (isRegionPage && params.slug) {
+      // Convert slug to readable name
+      const regionName = params.slug.split('-').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ')
+      return `${regionName} Products`
+    }
+    if (isCountryPage && params.code) {
+      return `Products from ${params.code.toUpperCase()}`
+    }
     const searchQuery = searchParams.get('search')
     if (searchQuery) return `Search Results for "${searchQuery}"`
     return 'All Products'

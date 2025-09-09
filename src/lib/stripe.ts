@@ -1,53 +1,20 @@
 import { loadStripe } from '@stripe/stripe-js'
 
-// Replace with your actual Stripe publishable key
-// For demo purposes, using a test key placeholder
-const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder'
+// Get the publishable key from environment variables
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
 
-export const stripePromise = loadStripe(stripePublishableKey)
-
-export const STRIPE_CONFIG = {
-  appearance: {
-    theme: 'stripe' as const,
-    variables: {
-      colorPrimary: '#2563EB',
-      colorBackground: '#ffffff',
-      colorText: '#1f2937',
-      colorDanger: '#ef4444',
-      fontFamily: 'system-ui, sans-serif',
-      spacingUnit: '4px',
-      borderRadius: '8px'
-    }
-  },
-  loader: 'auto' as const
+if (!stripePublishableKey) {
+  console.warn('Stripe publishable key not found. Make sure VITE_STRIPE_PUBLISHABLE_KEY is set in your environment variables.')
 }
 
-export interface PaymentIntentResponse {
-  clientSecret: string
-  paymentIntentId: string
-  orderId: number
-  orderNumber: string
-  amount: number
-  currency: string
-  status: string
+// Initialize Stripe
+export const stripePromise = loadStripe(stripePublishableKey || '')
+
+// Stripe configuration
+export const stripeConfig = {
+  publishableKey: stripePublishableKey,
+  currency: 'usd',
+  country: 'US'
 }
 
-export interface CreatePaymentIntentRequest {
-  amount: number
-  currency?: string
-  cartItems: Array<{
-    product_id: number
-    product_name: string
-    product_image_url?: string
-    quantity: number
-    price: number
-  }>
-  customerInfo: {
-    email: string
-    firstName: string
-    lastName: string
-    shippingAddress: any
-    billingAddress: any
-  }
-  couponCode?: string | null
-}
+export default stripePromise
