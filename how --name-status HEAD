@@ -1,0 +1,5 @@
+[33mfe007ec5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat: Implement complete i18n system and legal pages
+[33m38c84647[m Actualización del proyecto con archivos mejorados y dependencias limpias
+[33m7cf4a9a7[m[33m ([m[1;31morigin/SweetTrip-copy[m[33m)[m fix: remove logo from floating candies; ensure header/footer/logo transparent; build OK
+[33mc44b99c7[m UX: compact header on scroll; remove mobile floating logos
+[33m8bdc2db7[m UX: center video section, header/footer styling, theme/lang toggles, increased hero emojis, README update
