@@ -17,15 +17,16 @@ export default function CheckoutSuccessPage() {
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null)
   const [loading, setLoading] = useState(true)
   
-  const paymentIntentId = searchParams.get('payment_intent')
+  const orderNumber = searchParams.get('order')
+  const paymentId = searchParams.get('payment')
 
   useEffect(() => {
-    if (paymentIntentId) {
+    if (orderNumber) {
       fetchOrderDetails()
     } else {
       setLoading(false)
     }
-  }, [paymentIntentId])
+  }, [orderNumber])
 
   const fetchOrderDetails = async () => {
     try {
@@ -46,7 +47,7 @@ export default function CheckoutSuccessPage() {
             )
           )
         `)
-        .eq('stripe_payment_intent_id', paymentIntentId)
+        .eq('order_number', orderNumber)
         .single()
 
       if (error) {
@@ -104,7 +105,7 @@ export default function CheckoutSuccessPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Order #{orderDetails.id}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">Order #{orderDetails.order_number || orderDetails.id}</h2>
                   <p className="text-gray-600">{formatDate(orderDetails.created_at)}</p>
                 </div>
                 <div className="text-right">
@@ -145,8 +146,8 @@ export default function CheckoutSuccessPage() {
               <Receipt className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-900 mb-2">Order Confirmation</h2>
               <p className="text-gray-600 mb-4">Your payment was processed successfully. You should receive an email confirmation shortly.</p>
-              {paymentIntentId && (
-                <p className="text-sm text-gray-500">Payment ID: {paymentIntentId}</p>
+              {paymentId && (
+                <p className="text-sm text-gray-500">Payment ID: {paymentId}</p>
               )}
             </div>
           )}

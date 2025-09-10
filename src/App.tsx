@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './contexts/AuthContext'
+import { LanguageProvider } from './hooks/useLanguage'
 import Layout from './components/Layout'
 
 // Pages
@@ -28,6 +29,12 @@ import CountriesListPage from './pages/CountriesListPage'
 import AboutPage from './pages/AboutPage'
 import ContactPage from './pages/ContactPage'
 
+// Legal Pages
+import PrivacyPage from './pages/PrivacyPage'
+import TermsPage from './pages/TermsPage'
+import ShippingPage from './pages/ShippingPage'
+import ReturnsPage from './pages/ReturnsPage'
+
 // World Cup 2026 Pages
 import WorldCup2026Page from './pages/WorldCup2026Page'
 import CountriesPage from './pages/CountriesPage'
@@ -49,9 +56,10 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <Layout>
+      <LanguageProvider>
+        <AuthProvider>
+          <Router>
+            <Layout>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
@@ -78,6 +86,12 @@ function App() {
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
               
+              {/* Legal Pages */}
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/shipping" element={<ShippingPage />} />
+              <Route path="/returns" element={<ReturnsPage />} />
+              
               {/* World Cup 2026 Routes */}
               <Route path="/worldcup2026" element={<WorldCup2026Page />} />
               <Route path="/worldcup2026/countries" element={<CountriesPage />} />
@@ -90,9 +104,10 @@ function App() {
               <Route path="/admin/*" element={<AdminDashboard />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
-          </Layout>
-        </Router>
-      </AuthProvider>
+            </Layout>
+          </Router>
+        </AuthProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   )
 }

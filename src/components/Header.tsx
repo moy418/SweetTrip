@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, User, Search, Menu, X, Heart, Trophy, Globe2, Target, Star, TrendingUp, ChevronDown, Calendar, Flag } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useCartStore } from '../store/cartStore'
+import { useLanguage } from '../hooks/useLanguage'
 import { supabase } from '../lib/supabase'
 import NotificationCenter from './NotificationCenter'
 import toast from 'react-hot-toast'
@@ -29,6 +30,7 @@ interface Country {
 export default function Header() {
   const { user, profile, signOut } = useAuth()
   const { toggleCart, getTotalItems } = useCartStore()
+  const { language, setLanguage, t } = useLanguage()
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -98,7 +100,6 @@ export default function Header() {
   }
 
   const [theme, setTheme] = React.useState<'light'|'dark'>(() => (typeof window !== 'undefined' && localStorage.getItem('site-theme')) as 'light'|'dark' || 'light')
-  const [lang, setLang] = React.useState<'en'|'es'>(() => (typeof window !== 'undefined' && (localStorage.getItem('site-lang') as 'en'|'es')) || 'en')
 
   React.useEffect(() => {
     if (typeof window === 'undefined') return
@@ -122,11 +123,6 @@ export default function Header() {
     }
     return () => { if (typeof window !== 'undefined') window.removeEventListener('scroll', onScroll) }
   }, [lastScrollY])
-
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return
-    localStorage.setItem('site-lang', lang)
-  }, [lang])
 
   useEffect(() => {
     loadNavigationData()
@@ -182,7 +178,7 @@ export default function Header() {
     }
   }
 
-  const bannerText = lang === 'es' ? 'Envío gratis en pedidos sobre $60!' : 'Free shipping on orders over $60!'
+  const bannerText = t('freeShipping')
 
   return (
   <header className={`fixed top-0 left-0 right-0 z-50 bg-gray-900 text-white shadow-lg transition-transform duration-300 ${
@@ -239,7 +235,7 @@ export default function Header() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={lang === 'es' ? 'Buscar dulces exóticos...' : 'Search for exotic candies...'}
+                placeholder={t('searchPlaceholder')}
                 className={`w-full pr-10 border border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-800 text-white transition-all duration-300 ${
                   isScrolled ? 'px-3 py-2 text-sm' : 'px-4 py-2'
                 }`}
@@ -293,8 +289,8 @@ export default function Header() {
             {/* Language selector */}
             <div className="relative">
               <select
-                value={lang}
-                onChange={(e) => setLang(e.target.value as 'en'|'es')}
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as 'en'|'es')}
                 className="bg-transparent border border-gray-200 text-sm rounded-md px-2 py-1"
                 aria-label="Language"
               >
@@ -381,7 +377,7 @@ export default function Header() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for exotic candies..."
+              placeholder={t('searchPlaceholder')}
               className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <button 
@@ -406,7 +402,7 @@ export default function Header() {
               to="/regions"
               className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full font-medium text-xs transition-all hover:scale-105"
             >
-              Explore Now
+              {t('exploreNow')}
             </Link>
           </div>
         </div>
@@ -423,7 +419,7 @@ export default function Header() {
                   className="block py-2 md:py-4 text-gray-700 hover:text-blue-600 font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Home
+                  {t('home')}
                 </Link>
               </li>
               
@@ -435,7 +431,7 @@ export default function Header() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Calendar className="h-4 w-4" />
-                  <span>World Cup 2026</span>
+                  <span>{t('worldCup2026')}</span>
                   <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium text-xs">Special</span>
                 </Link>
               </li>
@@ -457,7 +453,7 @@ export default function Header() {
                           setIsCategoriesOpen(!isCategoriesOpen)
                         }}
                       >
-                        <span>Categories</span>
+                        <span>{t('categories')}</span>
                         <ChevronDown className={`h-4 w-4 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
                       </button>
                       {isCategoriesOpen && (
@@ -525,7 +521,7 @@ export default function Header() {
                         }}
                       >
                         <Globe2 className="h-4 w-4" />
-                        <span>Regions</span>
+                        <span>{t('regions')}</span>
                         <ChevronDown className={`h-4 w-4 transition-transform ${isRegionsOpen ? 'rotate-180' : ''}`} />
                       </button>
                       {isRegionsOpen && (
@@ -600,7 +596,7 @@ export default function Header() {
                         }}
                       >
                         <Flag className="h-4 w-4" />
-                        <span>Countries</span>
+                        <span>{t('countries')}</span>
                         <ChevronDown className={`h-4 w-4 transition-transform ${isCountriesOpen ? 'rotate-180' : ''}`} />
                       </button>
                       {isCountriesOpen && (
@@ -659,7 +655,7 @@ export default function Header() {
                   className="block py-2 md:py-4 text-gray-700 hover:text-blue-600 font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Featured
+                  {t('featured')}
                 </Link>
               </li>
               <li>
@@ -668,7 +664,7 @@ export default function Header() {
                   className="block py-2 md:py-4 text-gray-700 hover:text-blue-600 font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  New Arrivals
+                  {t('newArrivals')}
                 </Link>
               </li>
               <li>
@@ -677,7 +673,7 @@ export default function Header() {
                   className="block py-2 md:py-4 text-gray-700 hover:text-blue-600 font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  About
+                  {t('about')}
                 </Link>
               </li>
               <li>
@@ -686,7 +682,7 @@ export default function Header() {
                   className="block py-2 md:py-4 text-gray-700 hover:text-blue-600 font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Contact
+                  {t('contact')}
                 </Link>
               </li>
             </ul>

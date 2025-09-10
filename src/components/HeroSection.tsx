@@ -1,9 +1,12 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Globe } from 'lucide-react'
+import { useLanguage } from '../hooks/useLanguage'
 import LazyImage from './LazyImage'
 
 export default function HeroSection() {
+  const { t } = useLanguage()
+  
   return (
     <section className="relative min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-blue-600 text-white overflow-hidden flex items-center pt-24">
       {/* Animated Background Elements - Optimized */}
@@ -32,19 +35,19 @@ export default function HeroSection() {
 
             {/* Main Headline - More Compact */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight">
-              <span className="block text-white animate-fade-in-down will-change-transform">Discover</span>
+              <span className="block text-white animate-fade-in-down will-change-transform">{t('discoverCandy')}</span>
               <span className="block bg-gradient-to-r from-pink-300 via-yellow-300 to-orange-300 bg-clip-text text-transparent animate-gradient-x">
                 Candy
               </span>
               <span className="block text-white animate-fade-in-down delay-200 will-change-transform">from</span>
               <span className="block bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 bg-clip-text text-transparent animate-gradient-x delay-300">
-                Around the World
+                {t('fromAroundWorld')}
               </span>
             </h1>
 
             {/* Subtitle - More Compact */}
             <p className="text-lg md:text-xl text-white/90 leading-relaxed max-w-xl animate-fade-in-up delay-400 will-change-transform">
-              Embark on a <span className="font-bold text-yellow-300">sweet adventure</span> and discover exotic flavors, 
+              Embark on a <span className="font-bold text-yellow-300">{t('sweetAdventure')}</span> and discover exotic flavors, 
               unique treats, and authentic candies from every corner of the globe.
             </p>
 
@@ -54,7 +57,7 @@ export default function HeroSection() {
                 to="/featured"
                 className="group relative bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center space-x-3 shadow-2xl hover:shadow-pink-500/25 hover:scale-105 transform will-change-transform"
               >
-                <span>🍭 Shop Featured</span>
+                <span>🍭 {t('shopFeatured')}</span>
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-purple-500 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity"></div>
               </Link>
@@ -63,7 +66,7 @@ export default function HeroSection() {
                 className="group bg-white/20 backdrop-blur-sm border-2 border-white/30 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/30 hover:border-white/50 transition-all duration-300 flex items-center justify-center space-x-3 shadow-xl hover:shadow-white/25 hover:scale-105 transform will-change-transform"
               >
                 <Globe className="h-5 w-5" />
-                <span>🌍 Explore Categories</span>
+                <span>🌍 {t('exploreCategories')}</span>
               </Link>
             </div>
 

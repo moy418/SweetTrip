@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingBag, Lock, CreditCard, ArrowLeft, Loader2 } from 'lucide-react'
-import { Elements } from '@stripe/react-stripe-js'
 import { useCartStore } from '../store/cartStore'
 import { useAuth } from '../contexts/AuthContext'
-import { stripePromise } from '../lib/stripe'
-import CheckoutForm from '../components/CheckoutForm'
+import { supabase } from '../lib/supabase'
+import MockPaymentForm from '../components/MockPaymentForm'
 import toast from 'react-hot-toast'
 
 export default function CheckoutPage() {
@@ -13,8 +12,8 @@ export default function CheckoutPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   
-  const [clientSecret, setClientSecret] = useState<string>('')
   const [loading, setLoading] = useState(false)
+  const [orderCreated, setOrderCreated] = useState(false)
   const [customerInfo, setCustomerInfo] = useState({
     email: user?.email || '',
     firstName: '',
@@ -48,57 +47,82 @@ export default function CheckoutPage() {
       navigate('/cart')
       return
     }
-    createPaymentIntent()
-  }, [items, total])
+  }, [items])
 
-  const createPaymentIntent = async () => {
+  const createOrder = async () => {
     try {
       setLoading(true)
       
-      // Prepare cart items for the backend
-      const cartItems = items.map(item => ({
-        product_id: item.product.id,
-        product_name: item.product.name,
-        quantity: item.quantity,
-        price: item.product.price,
-        product_image_url: item.product.image_urls?.[0] || null,
-        origin_country: item.product.origin_country || null
-      }))
+      // Generate unique order number
+      const orderNumber = 'ST-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5).toUpperCase()
       
-      const response = await fetch('https://pmqcegwfucfbwwmwumkk.supabase.co/functions/v1/stripe-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          amount: total,
-          currency: 'usd',
-          cartItems,
-          customerEmail: customerInfo.email,
-          shippingAddress: sameBillingAddress ? shippingAddress : shippingAddress,
-          billingAddress: sameBillingAddress ? shippingAddress : billingAddress
-        })
-      })
-      
-      const data = await response.json()
-      
-      if (data.error) {
-        throw new Error(data.error.message)
+      // Prepare order data
+      const orderData = {
+        user_id: user?.id || null,
+        order_number: orderNumber,
+        status: 'pending',
+        total_amount: total,
+        currency: 'usd',
+        shipping_cost: shippingCost,
+        shipping_address: shippingAddress,
+        billing_address: sameBillingAddress ? shippingAddress : billingAddress,
+        customer_email: customerInfo.email,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
       
-      setClientSecret(data.data.clientSecret)
-    } catch (error) {
-      console.error('Error creating payment intent:', error)
-      toast.error('Failed to initialize payment. Please try again.')
+      // Create order in database
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert([orderData])
+        .select()
+        .single()
+      
+      if (orderError) {
+        throw new Error(`Failed to create order: ${orderError.message}`)
+      }
+      
+      // Create order items
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        product_id: item.product.id,
+        quantity: item.quantity,
+        price_at_time: item.product.price,
+        product_name: item.product.name,
+        product_image_url: item.product.image_urls?.[0] || null,
+        country_code: item.product.origin_country || null,
+        created_at: new Date().toISOString()
+      }))
+      
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems)
+      
+      if (itemsError) {
+        console.error('Failed to create order items:', itemsError)
+        // Don't fail the entire operation for this
+      }
+      
+      setOrderCreated(true)
+      toast.success('Order created successfully!')
+      
+    } catch (error: any) {
+      console.error('Error creating order:', error)
+      toast.error(error.message || 'Failed to create order. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  const handlePaymentSuccess = (paymentIntent: any) => {
+  const handlePaymentSuccess = (paymentResult: any) => {
     // Clear cart and redirect to success page
     clearCart()
-    navigate(`/checkout/success?payment_intent=${paymentIntent.id}`)
+    navigate(`/checkout/success?order=${paymentResult.orderNumber}&payment=${paymentResult.paymentId}`)
+  }
+
+  const handlePaymentError = (error: string) => {
+    console.error('Payment error:', error)
+    toast.error(error)
   }
 
   const formatPrice = (price: number) => {
@@ -201,47 +225,170 @@ export default function CheckoutPage() {
                   <h2 className="text-xl font-semibold">Payment Information</h2>
                 </div>
 
-                {loading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                    <span className="ml-2 text-gray-600">Setting up secure payment...</span>
+                {!orderCreated ? (
+                  <div className="space-y-6">
+                    {/* Customer Information Form */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">Customer Information</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            First Name *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={customerInfo.firstName}
+                            onChange={(e) => setCustomerInfo({ ...customerInfo, firstName: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="John"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Last Name *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={customerInfo.lastName}
+                            onChange={(e) => setCustomerInfo({ ...customerInfo, lastName: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Doe"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email Address *
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={customerInfo.email}
+                          onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="john@example.com"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Phone Number
+                        </label>
+                        <input
+                          type="tel"
+                          value={customerInfo.phone}
+                          onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="(555) 123-4567"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Shipping Address */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">Shipping Address</h3>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Address Line 1 *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={shippingAddress.line1}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, line1: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="123 Main St"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Address Line 2
+                        </label>
+                        <input
+                          type="text"
+                          value={shippingAddress.line2}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, line2: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Apt 4B"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            City *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={shippingAddress.city}
+                            onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="New York"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            State *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={shippingAddress.state}
+                            onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="NY"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            ZIP Code *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={shippingAddress.postal_code}
+                            onChange={(e) => setShippingAddress({ ...shippingAddress, postal_code: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="10001"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Create Order Button */}
+                    <button
+                      onClick={createOrder}
+                      disabled={loading || !customerInfo.firstName || !customerInfo.lastName || !customerInfo.email || !shippingAddress.line1 || !shippingAddress.city || !shippingAddress.state || !shippingAddress.postal_code}
+                      className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <span>Creating Order...</span>
+                        </>
+                      ) : (
+                        <span>Continue to Payment</span>
+                      )}
+                    </button>
                   </div>
-                ) : clientSecret && stripePromise ? (
-                  <Elements 
-                    stripe={stripePromise} 
-                    options={{
-                      clientSecret,
-                      appearance: {
-                        theme: 'stripe',
-                        variables: {
-                          colorPrimary: '#2563eb',
-                          colorBackground: '#ffffff',
-                          colorText: '#1f2937',
-                          colorDanger: '#dc2626',
-                          fontFamily: 'system-ui, sans-serif',
-                          spacingUnit: '4px',
-                          borderRadius: '8px'
-                        }
-                      }
-                    }}
-                  >
-                    <CheckoutForm
-                      onPaymentSuccess={handlePaymentSuccess}
-                      customerInfo={customerInfo}
-                      setCustomerInfo={setCustomerInfo}
-                      shippingAddress={shippingAddress}
-                      setShippingAddress={setShippingAddress}
-                      billingAddress={billingAddress}
-                      setBillingAddress={setBillingAddress}
-                      sameBillingAddress={sameBillingAddress}
-                      setSameBillingAddress={setSameBillingAddress}
-                      total={total}
-                    />
-                  </Elements>
                 ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">Unable to load payment form. Please refresh the page.</p>
-                  </div>
+                  <MockPaymentForm
+                    onPaymentSuccess={handlePaymentSuccess}
+                    onPaymentError={handlePaymentError}
+                    customerInfo={customerInfo}
+                    shippingAddress={shippingAddress}
+                    total={total}
+                  />
                 )}
               </div>
             </div>

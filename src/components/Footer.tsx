@@ -1,8 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react'
+import { useLanguage } from '../hooks/useLanguage'
 
 export default function Footer() {
+  const { t } = useLanguage()
+  
   return (
     <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-12">
@@ -36,31 +39,31 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Quick Links</h3>
+            <h3 className="text-lg font-semibold">{t('quickLinks')}</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/" className="text-gray-400 hover:text-white transition-colors">
-                  Home
+                  {t('home')}
                 </Link>
               </li>
               <li>
                 <Link to="/featured" className="text-gray-400 hover:text-white transition-colors">
-                  Featured Products
+                  {t('featuredProducts')}
                 </Link>
               </li>
               <li>
                 <Link to="/new-arrivals" className="text-gray-400 hover:text-white transition-colors">
-                  New Arrivals
+                  {t('newArrivals')}
                 </Link>
               </li>
               <li>
                 <Link to="/about" className="text-gray-400 hover:text-white transition-colors">
-                  About Us
+                  {t('aboutUs')}
                 </Link>
               </li>
               <li>
                 <Link to="/contact" className="text-gray-400 hover:text-white transition-colors">
-                  Contact
+                  {t('contact')}
                 </Link>
               </li>
             </ul>
@@ -68,31 +71,31 @@ export default function Footer() {
 
           {/* Categories */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Categories</h3>
+            <h3 className="text-lg font-semibold">{t('categories')}</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/category/japanese-snacks" className="text-gray-400 hover:text-white transition-colors">
-                  Japanese Snacks
+                  {t('japaneseSnacks')}
                 </Link>
               </li>
               <li>
                 <Link to="/category/korean-treats" className="text-gray-400 hover:text-white transition-colors">
-                  Korean Treats
+                  {t('koreanTreats')}
                 </Link>
               </li>
               <li>
                 <Link to="/category/american-favorites" className="text-gray-400 hover:text-white transition-colors">
-                  American Favorites
+                  {t('americanFavorites')}
                 </Link>
               </li>
               <li>
                 <Link to="/category/european-delights" className="text-gray-400 hover:text-white transition-colors">
-                  European Delights
+                  {t('europeanDelights')}
                 </Link>
               </li>
               <li>
                 <Link to="/category/chocolate-collection" className="text-gray-400 hover:text-white transition-colors">
-                  Chocolate Collection
+                  {t('chocolateCollection')}
                 </Link>
               </li>
             </ul>
@@ -100,7 +103,7 @@ export default function Footer() {
 
           {/* Contact Info */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Contact Us</h3>
+            <h3 className="text-lg font-semibold">{t('contactUs')}</h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-gray-400" />
@@ -122,20 +125,20 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-sm text-gray-400">
-              © 2025 Sweet Trip. All rights reserved.
+              © 2025 Sweet Trip. {t('allRightsReserved')}.
             </div>
             <div className="flex space-x-6 text-sm">
               <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">
-                Privacy Policy
+                {t('privacyPolicy')}
               </Link>
               <Link to="/terms" className="text-gray-400 hover:text-white transition-colors">
-                Terms of Service
+                {t('termsOfService')}
               </Link>
               <Link to="/shipping" className="text-gray-400 hover:text-white transition-colors">
-                Shipping Info
+                {t('shippingInfo')}
               </Link>
               <Link to="/returns" className="text-gray-400 hover:text-white transition-colors">
-                Returns
+                {t('returns')}
               </Link>
             </div>
           </div>
