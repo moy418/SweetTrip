@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Globe } from 'lucide-react'
 import { useLanguage } from '../hooks/useLanguage'
 import LazyImage from './LazyImage'
+import CountdownTimer from './CountdownTimer'
 
 export default function HeroSection() {
   const { t } = useLanguage()
@@ -50,25 +51,136 @@ export default function HeroSection() {
               Embark on a <span className="font-bold text-yellow-300">{t('sweetAdventure')}</span> and discover exotic flavors, 
               unique treats, and authentic candies from every corner of the globe.
             </p>
+            
+            {/* Compelling CTA Text with Psychological Triggers */}
+            <div className="text-center lg:text-left animate-fade-in-up delay-500 will-change-transform">
+              {/* Urgency & Scarcity */}
+              <div className="inline-flex items-center space-x-2 bg-red-500/20 backdrop-blur-sm border border-red-400/30 rounded-full px-4 py-2 mb-4 animate-pulse">
+                <span className="text-red-300 text-sm font-bold">⚡ LIMITED TIME</span>
+                <span className="text-yellow-300 text-sm">Free shipping on orders $60+</span>
+              </div>
+              
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                Ready to <span className="text-yellow-300">explore</span>?
+              </h3>
+              <p className="text-lg text-white/80 mb-4">
+                Choose your adventure and start discovering amazing treats!
+              </p>
+              
+              {/* Social Proof */}
+              <div className="flex items-center justify-center lg:justify-start space-x-4 text-sm text-white/70 mb-6">
+                <div className="flex items-center space-x-1">
+                  <span className="text-yellow-300">⭐⭐⭐⭐⭐</span>
+                  <span className="font-semibold">4.9/5</span>
+                </div>
+                <div className="text-white/50">•</div>
+                <div className="flex items-center space-x-1">
+                  <span className="text-2xl">👥</span>
+                  <span><span className="font-bold text-yellow-300">2,847</span> sweet explorers</span>
+                </div>
+                <div className="text-white/50">•</div>
+                <div className="flex items-center space-x-1">
+                  <span className="text-2xl">🌍</span>
+                  <span><span className="font-bold text-yellow-300">50+</span> countries</span>
+                </div>
+              </div>
+              
+              {/* Loss Aversion */}
+              <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-sm border border-orange-400/30 rounded-2xl p-4 mb-6">
+                <p className="text-orange-200 text-sm font-medium">
+                  <span className="text-yellow-300 font-bold">⚠️ Don't miss out!</span> Join thousands discovering rare treats that disappear fast from our shelves.
+                </p>
+              </div>
+            </div>
 
-            {/* CTA Buttons - More Compact */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-in-up delay-600 will-change-transform">
+            {/* CTA Buttons - Enhanced with Psychological Triggers */}
+            <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start animate-fade-in-up delay-600 will-change-transform">
               <Link
                 to="/featured"
-                className="group relative bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center space-x-3 shadow-2xl hover:shadow-pink-500/25 hover:scale-105 transform will-change-transform"
+                className="group relative bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 text-white px-10 py-6 rounded-3xl font-black text-xl hover:from-pink-600 hover:via-purple-700 hover:to-indigo-700 transition-all duration-500 flex items-center justify-center space-x-4 shadow-2xl hover:shadow-pink-500/40 hover:scale-110 transform will-change-transform border-2 border-white/20 hover:border-white/40 animate-pulse-subtle"
               >
-                <span>🍭 {t('shopFeatured')}</span>
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-purple-500 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity"></div>
+                {/* Animated glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-purple-500 rounded-3xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-500"></div>
+                
+                {/* Pulsing ring */}
+                <div className="absolute inset-0 rounded-3xl border-2 border-pink-300/50 animate-ping"></div>
+                
+                {/* Scarcity indicator */}
+                <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce">
+                  🔥 HOT
+                </div>
+                
+                {/* Content */}
+                <span className="relative z-10 text-2xl animate-bounce">🍭</span>
+                <div className="relative z-10 flex flex-col items-start">
+                  <span>{t('shopFeatured')}</span>
+                  <span className="text-sm font-normal opacity-90">Limited Edition</span>
+                </div>
+                <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform duration-300 relative z-10" />
+                
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-white/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Shine effect */}
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               </Link>
+              
               <Link
                 to="/categories"
-                className="group bg-white/20 backdrop-blur-sm border-2 border-white/30 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/30 hover:border-white/50 transition-all duration-300 flex items-center justify-center space-x-3 shadow-xl hover:shadow-white/25 hover:scale-105 transform will-change-transform"
+                className="group relative bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 text-white px-10 py-6 rounded-3xl font-black text-xl hover:from-emerald-600 hover:via-teal-700 hover:to-cyan-700 transition-all duration-500 flex items-center justify-center space-x-4 shadow-2xl hover:shadow-emerald-500/40 hover:scale-110 transform will-change-transform border-2 border-white/20 hover:border-white/40 animate-pulse-subtle"
               >
-                <Globe className="h-5 w-5" />
-                <span>🌍 {t('exploreCategories')}</span>
+                {/* Animated glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-3xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-500"></div>
+                
+                {/* Pulsing ring */}
+                <div className="absolute inset-0 rounded-3xl border-2 border-emerald-300/50 animate-ping"></div>
+                
+                {/* Authority indicator */}
+                <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                  ✨ NEW
+                </div>
+                
+                {/* Content */}
+                <Globe className="h-6 w-6 group-hover:rotate-12 transition-transform duration-300 relative z-10" />
+                <div className="relative z-10 flex flex-col items-start">
+                  <span>{t('exploreCategories')}</span>
+                  <span className="text-sm font-normal opacity-90">50+ Countries</span>
+                </div>
+                <span className="relative z-10 text-2xl animate-bounce">🌍</span>
+                
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-white/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Shine effect */}
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               </Link>
             </div>
+            
+            {/* Additional Psychological Triggers Below Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-6 animate-fade-in-up delay-700 will-change-transform">
+              {/* Trust & Security */}
+              <div className="flex items-center space-x-2 text-white/70 text-sm">
+                <span className="text-green-400">🔒</span>
+                <span>Secure checkout</span>
+              </div>
+              <div className="hidden sm:block text-white/30">•</div>
+              
+              {/* Money-back guarantee */}
+              <div className="flex items-center space-x-2 text-white/70 text-sm">
+                <span className="text-blue-400">💰</span>
+                <span>100% money-back</span>
+              </div>
+              <div className="hidden sm:block text-white/30">•</div>
+              
+              {/* Fast shipping */}
+              <div className="flex items-center space-x-2 text-white/70 text-sm">
+                <span className="text-orange-400">🚚</span>
+                <span>Fast worldwide shipping</span>
+              </div>
+            </div>
+            
+            {/* Countdown Timer */}
+            <CountdownTimer />
 
             {/* Trust Indicators - More Compact */}
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 animate-fade-in-up delay-800 will-change-transform">

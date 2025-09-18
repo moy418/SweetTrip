@@ -6,6 +6,7 @@ import { useCartStore } from '../store/cartStore'
 import { useLanguage } from '../hooks/useLanguage'
 import { supabase } from '../lib/supabase'
 import NotificationCenter from './NotificationCenter'
+import { useHeaderScroll } from '../hooks/useScrollBehavior'
 import toast from 'react-hot-toast'
 
 interface Category {
@@ -34,9 +35,9 @@ export default function Header() {
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isScrollingDown, setIsScrollingDown] = useState(false)
-  const [lastScrollY, setLastScrollY] = useState(0)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  // Usar el hook personalizado para el comportamiento del scroll
+  const { isScrolled, isScrollingDown } = useHeaderScroll()
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
   const [isRegionsOpen, setIsRegionsOpen] = useState(false)
   const [isCountriesOpen, setIsCountriesOpen] = useState(false)
@@ -52,6 +53,12 @@ export default function Header() {
       if (target.closest('.dropdown-container')) {
         return
       }
+      
+      // Close search bar if clicking outside
+      if (isSearchOpen && !target.closest('form')) {
+        setIsSearchOpen(false)
+      }
+      
       setIsCategoriesOpen(false)
       setIsRegionsOpen(false)
       setIsCountriesOpen(false)
@@ -59,7 +66,7 @@ export default function Header() {
     
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
-  }, [])
+  }, [isSearchOpen])
 
   // Auto-close dropdown after delay when mouse leaves both trigger and dropdown
   const createHoverHandlers = (setOpenState: (open: boolean) => void) => {
@@ -87,6 +94,7 @@ export default function Header() {
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
       setSearchQuery('')
+      setIsSearchOpen(false) // Cerrar el search bar después de buscar
     }
   }
 
@@ -107,22 +115,7 @@ export default function Header() {
     localStorage.setItem('site-theme', theme)
   }, [theme])
 
-  useEffect(() => {
-    const onScroll = () => {
-      const scrollY = window.scrollY
-      const scrolledPastThreshold = scrollY > 60
-      const scrollDirection = scrollY > lastScrollY
-      
-      setIsScrolled(scrolledPastThreshold)
-      setIsScrollingDown(scrollDirection && scrollY > 100)
-      setLastScrollY(scrollY)
-    }
-    
-    if (typeof window !== 'undefined') {
-      window.addEventListener('scroll', onScroll, { passive: true })
-    }
-    return () => { if (typeof window !== 'undefined') window.removeEventListener('scroll', onScroll) }
-  }, [lastScrollY])
+  // El comportamiento del scroll ahora se maneja con useHeaderScroll hook
 
   useEffect(() => {
     loadNavigationData()
@@ -181,83 +174,71 @@ export default function Header() {
   const bannerText = t('freeShipping')
 
   return (
-  <header className={`fixed top-0 left-0 right-0 z-50 bg-gray-900 text-white shadow-lg transition-transform duration-300 ${
-    isScrollingDown ? '-translate-y-full' : 'translate-y-0'
-  }`}> 
-      {/* Top Banner - Hidden when scrolled */}
-      <div className={`top-banner py-2 bg-gray-900 text-white transition-all duration-300 ${
-        isScrolled ? 'h-0 py-0 opacity-0 overflow-hidden' : 'h-auto opacity-100'
-      }`}>
-        <div className="container mx-auto px-4 text-center text-sm text-white">
-          {bannerText}
-        </div>
-      </div>
+    <header className={`fixed top-0 left-0 right-0 z-50 bg-gray-900 text-white shadow-lg transition-all duration-500 ease-in-out ${
+      isScrollingDown ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
+    }`}>
 
-      {/* Main Header */}
-  <div className={`container mx-auto px-4 ${isScrolled ? 'py-2' : 'py-6'} transition-all` }>
+      {/* Main Header - More Compact */}
+  <div className={`container mx-auto px-4 ${isScrolled ? 'py-2' : 'py-3'} transition-all` }>
           <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
+          {/* Logo - Maximum Size without text */}
+          <Link to="/" className="flex items-center">
             <img 
               src="/sweetlogo-removebg-preview.png" 
               alt="Sweet Trip Logo" 
               className={`transition-all duration-300 bg-transparent object-contain ${
                 isScrolled 
-                  ? 'h-14 w-14 sm:h-16 sm:w-16' 
-                  : 'h-16 w-16 sm:h-20 sm:w-20 md:h-40 md:w-40 lg:h-48 lg:w-48 hover:scale-105'
+                  ? 'h-20 w-20' 
+                  : 'h-32 w-32 hover:scale-105'
               }`}
               style={{ backgroundColor: 'transparent' }}
             />
-            <div className={`transition-all duration-300 ${
-              isScrolled ? 'transform scale-75 origin-left' : ''
-            }`}>
-              <h1 className={`font-bold text-white transition-all duration-300 ${
-                isScrolled 
-                  ? 'text-lg sm:text-xl' 
-                  : 'text-2xl sm:text-3xl md:text-3xl'
-              }`}>
-                Sweet Trip
-              </h1>
-              <p className={`text-white/80 font-medium transition-all duration-300 ${
-                isScrolled 
-                  ? 'text-xs opacity-70' 
-                  : 'text-sm opacity-100'
-              }`}>Discover Candy from Around the World</p>
-            </div>
           </Link>
 
-          {/* Search Bar */}
-              <form onSubmit={handleSearch} className={`hidden md:flex flex-1 mx-8 transition-all duration-300 ${
-                isScrolled ? 'max-w-md' : 'max-w-lg'
-              }`}>
-            <div className="relative w-full">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('searchPlaceholder')}
-                className={`w-full pr-10 border border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-800 text-white transition-all duration-300 ${
-                  isScrolled ? 'px-3 py-2 text-sm' : 'px-4 py-2'
-                }`}
-              />
-              <button 
-                type="submit"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600"
-              >
-                <Search className="h-5 w-5" />
-              </button>
-            </div>
-          </form>
+          {/* Search Bar - Only show when search icon is clicked */}
+          {isSearchOpen && (
+            <form onSubmit={handleSearch} className={`hidden md:flex flex-1 mx-4 transition-all duration-300 ${
+              isScrolled ? 'max-w-sm' : 'max-w-md'
+            }`}>
+              <div className="relative w-full">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t('searchPlaceholder')}
+                  className={`w-full pr-10 border border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-800 text-white transition-all duration-300 ${
+                    isScrolled ? 'px-3 py-1.5 text-sm' : 'px-3 py-2'
+                  }`}
+                  autoFocus
+                />
+                <button 
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600"
+                >
+                  <Search className={`transition-all duration-300 ${isScrolled ? 'h-4 w-4' : 'h-4 w-4'}`} />
+                </button>
+              </div>
+            </form>
+          )}
 
-          {/* Right Side Actions */}
-          <div className="flex items-center space-x-4">
+          {/* Right Side Actions - More Compact */}
+          <div className="flex items-center space-x-2">
+            {/* Search Icon - Desktop */}
+            <button
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className="hidden md:block p-1.5 text-gray-600 hover:text-blue-600 transition-colors"
+              aria-label="Search"
+            >
+              <Search className={`transition-all duration-300 ${isScrolled ? 'h-5 w-5' : 'h-5 w-5'}`} />
+            </button>
+
             {/* Wishlist */}
             {user && (
               <Link
                 to="/wishlist"
-                className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
+                className="p-1.5 text-gray-600 hover:text-blue-600 transition-colors"
               >
-                <Heart className="h-6 w-6" />
+                <Heart className={`transition-all duration-300 ${isScrolled ? 'h-5 w-5' : 'h-5 w-5'}`} />
               </Link>
             )}
 
@@ -267,11 +248,13 @@ export default function Header() {
             {/* Cart */}
             <button
               onClick={toggleCart}
-              className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors"
+              className="relative p-1.5 text-gray-600 hover:text-blue-600 transition-colors"
             >
-              <ShoppingCart className="h-6 w-6" />
+              <ShoppingCart className={`transition-all duration-300 ${isScrolled ? 'h-5 w-5' : 'h-5 w-5'}`} />
               {getTotalItems() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full flex items-center justify-center transition-all duration-300 ${
+                  isScrolled ? 'h-4 w-4 text-xs' : 'h-5 w-5'
+                }`}>
                   {getTotalItems()}
                 </span>
               )}
@@ -280,10 +263,12 @@ export default function Header() {
             {/* Theme toggle */}
             <button
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
+              className="p-1.5 text-gray-600 hover:text-blue-600 transition-colors"
               aria-label="Toggle theme"
             >
-              {theme === 'light' ? '🌞' : '🌙'}
+              <span className={`transition-all duration-300 ${isScrolled ? 'text-sm' : 'text-base'}`}>
+                {theme === 'light' ? '🌞' : '🌙'}
+              </span>
             </button>
 
             {/* Language selector */}
@@ -360,6 +345,15 @@ export default function Header() {
               </div>
             </div>
 
+            {/* Mobile Search Icon */}
+            <button
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className="md:hidden p-2 text-gray-600 hover:text-blue-600"
+              aria-label="Search"
+            >
+              <Search className="h-6 w-6" />
+            </button>
+
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -370,53 +364,38 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile Search */}
-        <form onSubmit={handleSearch} className="md:hidden mt-4">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('searchPlaceholder')}
-              className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <button 
-              type="submit"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            >
-              <Search className="h-5 w-5" />
-            </button>
-          </div>
-        </form>
+        {/* Mobile Search - Only show when search icon is clicked */}
+        {isSearchOpen && (
+          <form onSubmit={handleSearch} className="md:hidden mt-4">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for exotic candies..."
+                className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoFocus
+              />
+              <button 
+                type="submit"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+            </div>
+          </form>
+        )}
       </div>
 
-      {/* Simplified International Focus Banner - Hidden when scrolled */}
-      <div className={`bg-gradient-to-r from-orange-500 to-red-500 text-white transition-all duration-300 ${
-        isScrolled ? 'h-0 py-0 opacity-0 overflow-hidden' : 'h-auto opacity-100'
-      }`}>
-        <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center justify-center space-x-3 text-sm">
-            <span className="text-lg">🌍</span>
-            <span className="font-semibold">50+ Countries • 1000+ Authentic Treats • Free Shipping $60+</span>
-            <Link
-              to="/regions"
-              className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full font-medium text-xs transition-all hover:scale-105"
-            >
-              {t('exploreNow')}
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
+      {/* Navigation - More Compact */}
       <nav className="bg-gray-50 border-t">
         <div className="container mx-auto px-4">
           <div className={`${isMenuOpen ? 'block' : 'hidden'} md:block`}>
-            <ul className="flex flex-col md:flex-row md:space-x-8 py-4 md:py-0">
+            <ul className="flex flex-col md:flex-row md:space-x-6 py-3 md:py-2">
               <li>
                 <Link
                   to="/"
-                  className="block py-2 md:py-4 text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                  className="block py-2 md:py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {t('home')}
@@ -652,7 +631,7 @@ export default function Header() {
               <li>
                 <Link
                   to="/featured"
-                  className="block py-2 md:py-4 text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                  className="block py-2 md:py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {t('featured')}
@@ -661,7 +640,7 @@ export default function Header() {
               <li>
                 <Link
                   to="/new-arrivals"
-                  className="block py-2 md:py-4 text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                  className="block py-2 md:py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {t('newArrivals')}
@@ -670,7 +649,7 @@ export default function Header() {
               <li>
                 <Link
                   to="/about"
-                  className="block py-2 md:py-4 text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                  className="block py-2 md:py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {t('about')}
@@ -679,7 +658,7 @@ export default function Header() {
               <li>
                 <Link
                   to="/contact"
-                  className="block py-2 md:py-4 text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                  className="block py-2 md:py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {t('contact')}

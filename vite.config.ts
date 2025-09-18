@@ -5,6 +5,16 @@ import sourceIdentifierPlugin from 'vite-plugin-source-identifier'
 
 const isProd = process.env.BUILD_MODE === 'prod'
 export default defineConfig({
+  server: {
+    port: 4001,
+    host: '0.0.0.0',
+    allowedHosts: [
+      'sweettripcandy.com',
+      'www.sweettripcandy.com',
+      'localhost',
+      '127.0.0.1'
+    ]
+  },
   plugins: [
     react(), 
     sourceIdentifierPlugin({

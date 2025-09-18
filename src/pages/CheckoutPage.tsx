@@ -3,17 +3,17 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingBag, Lock, CreditCard, ArrowLeft, Loader2 } from 'lucide-react'
 import { useCartStore } from '../store/cartStore'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
-import MockPaymentForm from '../components/MockPaymentForm'
+import ManualPaymentForm from '../components/ManualPaymentForm'
+import { sendOrderConfirmationEmail } from '../lib/emailService'
 import toast from 'react-hot-toast'
+import { buildOrderWebhookPayload, sendOrderWebhookToZapier } from '../lib/orderProcessor'
 
 export default function CheckoutPage() {
   const { items, getTotalPrice, clearCart } = useCartStore()
   const { user } = useAuth()
   const navigate = useNavigate()
   
-  const [loading, setLoading] = useState(false)
-  const [orderCreated, setOrderCreated] = useState(false)
+  const [orderProcessing, setOrderProcessing] = useState(false)
   const [customerInfo, setCustomerInfo] = useState({
     email: user?.email || '',
     firstName: '',
@@ -28,101 +28,172 @@ export default function CheckoutPage() {
     postal_code: '',
     country: 'US'
   })
-  const [billingAddress, setBillingAddress] = useState({
-    line1: '',
-    line2: '',
-    city: '',
-    state: '',
-    postal_code: '',
-    country: 'US'
-  })
-  const [sameBillingAddress, setSameBillingAddress] = useState(true)
-  
+
   const subtotal = getTotalPrice()
   const shippingCost = subtotal >= 60 ? 0 : 5.99
   const total = subtotal + shippingCost
 
   useEffect(() => {
-    if (items.length === 0) {
+    if (items.length === 0 && !window.location.pathname.includes('success')) {
       navigate('/cart')
       return
     }
-  }, [items])
+    
+    // Update email if user is logged in
+    if (user?.email) {
+      setCustomerInfo(prev => ({ ...prev, email: user.email || '' }))
+    }
+  }, [items, user])
 
-  const createOrder = async () => {
+
+  const handleManualPayment = async (paymentMethod: string, paymentDetails: any) => {
+    // Prevent duplicate orders
+    if (orderProcessing) {
+      console.log('Order already processing, ignoring duplicate request')
+      return
+    }
+
     try {
-      setLoading(true)
+      setOrderProcessing(true)
       
-      // Generate unique order number
-      const orderNumber = 'ST-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5).toUpperCase()
+      // Create order directly without Stripe
+      const orderNumber = `ST-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`
       
-      // Prepare order data
+      // Prepare cart items for the backend
+      const cartItems = items.map(item => ({
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        price: item.product.price,
+        product_image_url: item.product.image_urls?.[0] || null,
+        origin_country: item.product.origin_country || null
+      }))
+
+      // Calculate correct total based on delivery method
+      const finalShippingCost = paymentDetails.deliveryMethod === 'pickup' ? 0 : shippingCost
+      const finalTotal = subtotal + finalShippingCost
+
+      // Create order in Supabase - using only existing columns
       const orderData = {
         user_id: user?.id || null,
         order_number: orderNumber,
         status: 'pending',
-        total_amount: total,
+        total_amount: finalTotal,
         currency: 'usd',
-        shipping_cost: shippingCost,
-        shipping_address: shippingAddress,
-        billing_address: sameBillingAddress ? shippingAddress : billingAddress,
-        customer_email: customerInfo.email,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        shipping_cost: finalShippingCost,
+        shipping_address: paymentDetails.deliveryMethod === 'shipping' ? JSON.stringify(paymentDetails.shippingAddress) : null,
+        customer_email: paymentDetails.customerInfo?.email || user?.email || 'guest@sweettripcandy.com',
+        customer_first_name: paymentDetails.customerInfo?.firstName || '',
+        customer_last_name: paymentDetails.customerInfo?.lastName || '',
+        customer_phone: paymentDetails.customerInfo?.phone || '',
+        payment_method: paymentMethod,
+        payment_reference: paymentDetails.reference || null,
+        payment_notes: paymentDetails.notes || null,
+        delivery_method: paymentDetails.deliveryMethod || 'shipping'
       }
+
+      console.log('Creating manual payment order:', orderData)
+      console.log('Payment details received:', paymentDetails)
+
+      const response = await fetch('https://pmqcegwfucfbwwmwumkk.supabase.co/rest/v1/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_KEY}`,
+          'apikey': `${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(orderData)
+      })
+
+      console.log('Order creation response status:', response.status)
       
-      // Create order in database
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert([orderData])
-        .select()
-        .single()
-      
-      if (orderError) {
-        throw new Error(`Failed to create order: ${orderError.message}`)
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Failed to create order:', errorText)
+        throw new Error(`Error ${response.status}: ${errorText}`)
       }
+
+      const orderResult = await response.json()
+      console.log('Order creation result:', orderResult)
       
+      if (!orderResult || !Array.isArray(orderResult) || orderResult.length === 0) {
+        throw new Error('Invalid order response from server')
+      }
+
+      const orderId = orderResult[0].id
+      console.log('Order created successfully:', orderId)
+
       // Create order items
-      const orderItems = items.map(item => ({
-        order_id: order.id,
-        product_id: item.product.id,
+      const orderItemsData = cartItems.map(item => ({
+        order_id: orderId,
+        product_id: item.product_id,
         quantity: item.quantity,
-        price_at_time: item.product.price,
-        product_name: item.product.name,
-        product_image_url: item.product.image_urls?.[0] || null,
-        country_code: item.product.origin_country || null,
-        created_at: new Date().toISOString()
+        price_at_time: item.price,
+        product_name: item.product_name,
+        product_image_url: item.product_image_url,
+        country_code: item.origin_country || null
       }))
-      
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems)
-      
-      if (itemsError) {
-        console.error('Failed to create order items:', itemsError)
-        // Don't fail the entire operation for this
+
+      const itemsResponse = await fetch('https://pmqcegwfucfbwwmwumkk.supabase.co/rest/v1/order_items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_KEY}`,
+          'apikey': `${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify(orderItemsData)
+      })
+
+      if (!itemsResponse.ok) {
+        console.error('Failed to create order items, but continuing...')
+      } else {
+        console.log('Order items created successfully')
       }
       
-      setOrderCreated(true)
-      toast.success('Order created successfully!')
+      // Save full order details to local storage for success page
+      const fullOrderForSuccessPage = {
+        ...orderData,
+        items: cartItems
+      }
+      localStorage.setItem(`order_${orderNumber}`, JSON.stringify(fullOrderForSuccessPage))
+
+      // ✅ SEND STRUCTURED WEBHOOK TO ZAPIER (centralized module)
+      try {
+        const webhookPayload = buildOrderWebhookPayload(
+          orderData,
+          cartItems,
+          paymentDetails.customerInfo,
+          paymentDetails
+        )
+        await sendOrderWebhookToZapier(webhookPayload)
+        console.log('✅ Webhook sent to Zapier successfully for customer')
+
+        // Send a separate one for admin if needed
+        const adminWebhookPayload = buildOrderWebhookPayload(
+          orderData,
+          cartItems,
+          paymentDetails.customerInfo,
+          paymentDetails,
+          true // isAdminNotification = true
+        )
+        await sendOrderWebhookToZapier(adminWebhookPayload)
+        console.log('✅ Webhook sent to Zapier successfully for admin')
+
+      } catch (webhookError) {
+        console.error('❌ Error sending webhook to Zapier:', webhookError)
+      }
       
-    } catch (error: any) {
-      console.error('Error creating order:', error)
-      toast.error(error.message || 'Failed to create order. Please try again.')
+      // Clear cart and redirect
+      clearCart()
+      navigate(`/checkout/success?order_number=${orderNumber}&payment_method=${paymentMethod}`)
+      
+    } catch (error) {
+      console.error('Error submitting manual payment:', error)
+      toast.error('Error al crear la orden. Por favor intenta de nuevo.')
     } finally {
-      setLoading(false)
+      setOrderProcessing(false)
     }
-  }
-
-  const handlePaymentSuccess = (paymentResult: any) => {
-    // Clear cart and redirect to success page
-    clearCart()
-    navigate(`/checkout/success?order=${paymentResult.orderNumber}&payment=${paymentResult.paymentId}`)
-  }
-
-  const handlePaymentError = (error: string) => {
-    console.error('Payment error:', error)
-    toast.error(error)
   }
 
   const formatPrice = (price: number) => {
@@ -225,171 +296,24 @@ export default function CheckoutPage() {
                   <h2 className="text-xl font-semibold">Payment Information</h2>
                 </div>
 
-                {!orderCreated ? (
-                  <div className="space-y-6">
-                    {/* Customer Information Form */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Customer Information</h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            First Name *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={customerInfo.firstName}
-                            onChange={(e) => setCustomerInfo({ ...customerInfo, firstName: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="John"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Last Name *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={customerInfo.lastName}
-                            onChange={(e) => setCustomerInfo({ ...customerInfo, lastName: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Doe"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Email Address *
-                        </label>
-                        <input
-                          type="email"
-                          required
-                          value={customerInfo.email}
-                          onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="john@example.com"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Phone Number
-                        </label>
-                        <input
-                          type="tel"
-                          value={customerInfo.phone}
-                          onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="(555) 123-4567"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Shipping Address */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Shipping Address</h3>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Address Line 1 *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={shippingAddress.line1}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, line1: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="123 Main St"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Address Line 2
-                        </label>
-                        <input
-                          type="text"
-                          value={shippingAddress.line2}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, line2: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Apt 4B"
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            City *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={shippingAddress.city}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="New York"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            State *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={shippingAddress.state}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="NY"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            ZIP Code *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={shippingAddress.postal_code}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, postal_code: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="10001"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Create Order Button */}
-                    <button
-                      onClick={createOrder}
-                      disabled={loading || !customerInfo.firstName || !customerInfo.lastName || !customerInfo.email || !shippingAddress.line1 || !shippingAddress.city || !shippingAddress.state || !shippingAddress.postal_code}
-                      className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                          <span>Creating Order...</span>
-                        </>
-                      ) : (
-                        <span>Continue to Payment</span>
-                      )}
-                    </button>
+                {!user && (
+                  <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h3 className="text-lg font-medium mb-4 text-blue-900">Guest Checkout</h3>
+                    <p className="text-blue-800 text-sm">
+                      You're checking out as a guest. Please fill out all required information in the form below.
+                    </p>
                   </div>
-                ) : (
-                  <MockPaymentForm
-                    onPaymentSuccess={handlePaymentSuccess}
-                    onPaymentError={handlePaymentError}
-                    customerInfo={customerInfo}
-                    shippingAddress={shippingAddress}
-                    total={total}
-                  />
                 )}
+                
+                <ManualPaymentForm
+                  onPaymentSubmitted={handleManualPayment}
+                  isProcessing={orderProcessing}
+                  customerInfo={customerInfo}
+                  setCustomerInfo={setCustomerInfo}
+                  shippingAddress={shippingAddress}
+                  setShippingAddress={setShippingAddress}
+                  isGuestCheckout={!user}
+                />
               </div>
             </div>
           </div>

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { Search, Filter, Grid, List, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import CategoryVideoReel from '../components/CategoryVideoReel'
+import { CATEGORY_VIDEOS } from '../data/categoryVideos'
 
 interface Category {
   id: string
@@ -82,6 +84,22 @@ export default function CategoriesPage() {
               organized by type and flavor profile.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Video Reel Section */}
+      <section className="py-16 bg-gradient-to-br from-gray-900 to-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Discover Our Categories
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Watch our curated video reels showcasing the best candies from each category around the world
+            </p>
+          </div>
+          
+          <CategoryVideoReel videos={CATEGORY_VIDEOS} />
         </div>
       </section>
 

@@ -20,6 +20,10 @@ import WishlistPage from './pages/WishlistPage'
 import CategoryPage from './pages/CategoryPage'
 import SearchPage from './pages/SearchPage'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminLoginPage from './pages/admin/AdminLoginPage'
+import OrderManagementPage from './pages/admin/OrderManagementPage'
+import VideoManagementPage from './pages/admin/VideoManagementPage'
+import AdminRoute from './components/AdminRoute'
 import NotFoundPage from './pages/NotFoundPage'
 
 // New Navigation Pages
@@ -101,7 +105,28 @@ function App() {
               <Route path="/stories" element={<CulturalStoriesPage />} />
               <Route path="/stories/:type/:id" element={<CulturalStoriesPage />} />
               
-              <Route path="/admin/*" element={<AdminDashboard />} />
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLoginPage />} />
+              <Route path="/admin" element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              } />
+              <Route path="/admin/orders" element={
+                <AdminRoute>
+                  <OrderManagementPage />
+                </AdminRoute>
+              } />
+              <Route path="/admin/videos" element={
+                <AdminRoute>
+                  <VideoManagementPage />
+                </AdminRoute>
+              } />
+              <Route path="/admin/*" element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              } />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
             </Layout>
