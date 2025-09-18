@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ShoppingBag, Lock, CreditCard, ArrowLeft, Loader2 } from 'lucide-react'
-import { Elements } from '@stripe/react-stripe-js'
+import { ShoppingBag, Lock, CreditCard, ArrowLeft } from 'lucide-react'
 import { useCartStore } from '../store/cartStore'
 import { useAuth } from '../contexts/AuthContext'
-import { stripePromise } from '../lib/stripe'
-import CheckoutForm from '../components/CheckoutForm'
+import ManualPaymentForm from '../components/ManualPaymentForm'
+import { sendOrderConfirmationEmail } from '../lib/emailService'
 import toast from 'react-hot-toast'
+import { buildOrderWebhookPayload, sendOrderWebhookToZapier } from '../lib/orderProcessor'
 
 export default function CheckoutPage() {
   const { items, getTotalPrice, clearCart } = useCartStore()
   const { user } = useAuth()
   const navigate = useNavigate()
   
-  const [clientSecret, setClientSecret] = useState<string>('')
-  const [loading, setLoading] = useState(false)
+  const [orderProcessing, setOrderProcessing] = useState(false)
   const [customerInfo, setCustomerInfo] = useState({
     email: user?.email || '',
     firstName: '',
@@ -48,12 +47,26 @@ export default function CheckoutPage() {
       navigate('/cart')
       return
     }
-    createPaymentIntent()
-  }, [items, total])
+    
+    // Update email if user is logged in
+    if (user?.email) {
+      setCustomerInfo(prev => ({ ...prev, email: user.email || '' }))
+    }
+  }, [items, user])
 
-  const createPaymentIntent = async () => {
+
+  const handleManualPayment = async (paymentMethod: string, paymentDetails: any) => {
+    // Prevent duplicate orders
+    if (orderProcessing) {
+      console.log('Order already processing, ignoring duplicate request')
+      return
+    }
+
     try {
-      setLoading(true)
+      setOrderProcessing(true)
+      
+      // Create order directly without Stripe
+      const orderNumber = `ST-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`
       
       // Prepare cart items for the backend
       const cartItems = items.map(item => ({
@@ -64,41 +77,149 @@ export default function CheckoutPage() {
         product_image_url: item.product.image_urls?.[0] || null,
         origin_country: item.product.origin_country || null
       }))
-      
-      const response = await fetch('https://pmqcegwfucfbwwmwumkk.supabase.co/functions/v1/stripe-payment-intent', {
+
+      // Calculate correct total based on delivery method
+      const finalShippingCost = paymentDetails.deliveryMethod === 'pickup' ? 0 : shippingCost
+      const finalTotal = subtotal + finalShippingCost
+
+      // Create order in Supabase - using only existing columns
+      const orderData = {
+        user_id: user?.id || null,
+        order_number: orderNumber,
+        status: 'pending',
+        total_amount: finalTotal,
+        currency: 'usd',
+        shipping_cost: finalShippingCost,
+        shipping_address: paymentDetails.deliveryMethod === 'shipping' ? paymentDetails.shippingAddress : null,
+        billing_address: paymentDetails.shippingAddress || null,
+        customer_email: paymentDetails.customerInfo?.email || user?.email || 'guest@sweettripcandy.com',
+        // Store additional info in a custom field or notes
+        stripe_payment_intent_id: `manual_${paymentMethod}_${paymentDetails.reference || 'no_ref'}`
+      }
+
+      console.log('Creating manual payment order:', orderData)
+      console.log('Payment details received:', paymentDetails)
+
+      // Create order directly in Supabase (simplified version)
+      const response = await fetch('https://pmqcegwfucfbwwmwumkk.supabase.co/rest/v1/orders', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtcWNlZ3dmdWNmYnd3bXd1bWtrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM1Nzc3MywiZXhwIjoyMDcyOTMzNzczfQ.pot5CZbduD_utBRXA8VkjHp-q_QlvHDl0tPMN5RHNAI',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtcWNlZ3dmdWNmYnd3bXd1bWtrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM1Nzc3MywiZXhwIjoyMDcyOTMzNzczfQ.pot5CZbduD_utBRXA8VkjHp-q_QlvHDl0tPMN5RHNAI',
+          'Prefer': 'return=representation'
         },
-        body: JSON.stringify({
-          amount: total,
-          currency: 'usd',
-          cartItems,
-          customerEmail: customerInfo.email,
-          shippingAddress: sameBillingAddress ? shippingAddress : shippingAddress,
-          billingAddress: sameBillingAddress ? shippingAddress : billingAddress
-        })
+        body: JSON.stringify(orderData)
       })
+
+      console.log('Order creation response status:', response.status)
       
-      const data = await response.json()
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Failed to create order:', errorText)
+        throw new Error(`Error ${response.status}: ${errorText}`)
+      }
+
+      const order = await response.json()
+      console.log('Order creation result:', order)
       
-      if (data.error) {
-        throw new Error(data.error.message)
+      if (!order || !Array.isArray(order) || order.length === 0) {
+        throw new Error('Invalid order response from server')
+      }
+
+      const orderId = order[0].id
+      console.log('Order created successfully:', orderId)
+
+      // Create order items
+      const orderItemsData = cartItems.map(item => ({
+        order_id: orderId,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price_at_time: item.price,
+        product_name: item.product_name,
+        product_image_url: item.product_image_url,
+        country_code: item.origin_country || null
+      }))
+
+      // Save order items
+      const itemsResponse = await fetch('https://pmqcegwfucfbwwmwumkk.supabase.co/rest/v1/order_items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtcWNlZ3dmdWNmYnd3bXd1bWtrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM1Nzc3MywiZXhwIjoyMDcyOTMzNzczfQ.pot5CZbduD_utBRXA8VkjHp-q_QlvHDl0tPMN5RHNAI',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtcWNlZ3dmdWNmYnd3bXd1bWtrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM1Nzc3MywiZXhwIjoyMDcyOTMzNzczfQ.pot5CZbduD_utBRXA8VkjHp-q_QlvHDl0tPMN5RHNAI'
+        },
+        body: JSON.stringify(orderItemsData)
+      })
+
+      if (!itemsResponse.ok) {
+        console.error('Failed to create order items, but continuing...')
+      } else {
+        console.log('Order items created successfully')
       }
       
-      setClientSecret(data.data.clientSecret)
-    } catch (error) {
-      console.error('Error creating payment intent:', error)
-      toast.error('Failed to initialize payment. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
+      // ✅ SEND STRUCTURED WEBHOOK TO ZAPIER (centralized module)
+      try {
+        const webhookPayload = buildOrderWebhookPayload({
+          orderNumber,
+          customerFirstName: paymentDetails.customerInfo?.firstName,
+          customerLastName: paymentDetails.customerInfo?.lastName,
+          customerEmail: paymentDetails.customerInfo?.email || orderData.customer_email,
+          totalAmount: finalTotal,
+          deliveryMethod: paymentDetails.deliveryMethod || 'shipping',
+          shippingAddress: paymentDetails.shippingAddress,
+          items: cartItems
+        })
+        await sendOrderWebhookToZapier(webhookPayload)
+        console.log('✅ Webhook sent to Zapier successfully')
+      } catch (webhookError) {
+        console.error('❌ Error sending webhook to Zapier:', webhookError)
+      }
 
-  const handlePaymentSuccess = (paymentIntent: any) => {
-    // Clear cart and redirect to success page
-    clearCart()
-    navigate(`/checkout/success?payment_intent=${paymentIntent.id}`)
+      // Send notification to customer
+      try {
+        const notificationData = {
+          orderNumber,
+          customerName: `${paymentDetails.customerInfo?.firstName || 'Guest'} ${paymentDetails.customerInfo?.lastName || 'Customer'}`,
+          customerEmail: paymentDetails.customerInfo?.email || orderData.customer_email,
+          customerPhone: paymentDetails.customerInfo?.phone || '',
+          paymentMethod,
+          paymentReference: paymentDetails.reference || '',
+          deliveryMethod: paymentDetails.deliveryMethod || 'shipping',
+          shippingAddress: paymentDetails.deliveryMethod === 'shipping' ? paymentDetails.shippingAddress : null,
+          orderItems: cartItems.map(item => ({
+            product_name: item.product_name,
+            quantity: item.quantity,
+            price: item.price
+          })),
+          totalAmount: finalTotal,
+          shippingCost: finalShippingCost
+        }
+
+        console.log('Sending order notification:', notificationData)
+        
+        const emailSent = await sendOrderConfirmationEmail(notificationData)
+        
+        if (emailSent) {
+          toast.success(`¡Orden ${orderNumber} creada exitosamente! Revisa tu email para los detalles.`)
+        } else {
+          toast.success(`¡Orden ${orderNumber} creada exitosamente! Nos pondremos en contacto contigo pronto.`)
+        }
+      } catch (error) {
+        console.error('Error sending notification:', error)
+        toast.success(`¡Orden ${orderNumber} creada exitosamente! Nos pondremos en contacto contigo pronto.`)
+      }
+      
+      // Clear cart and redirect
+      clearCart()
+      navigate(`/checkout/success?order_number=${orderNumber}&payment_method=${paymentMethod}`)
+      
+    } catch (error) {
+      console.error('Error submitting manual payment:', error)
+      toast.error('Error al crear la orden. Por favor intenta de nuevo.')
+    } finally {
+      setOrderProcessing(false)
+    }
   }
 
   const formatPrice = (price: number) => {
@@ -201,48 +322,27 @@ export default function CheckoutPage() {
                   <h2 className="text-xl font-semibold">Payment Information</h2>
                 </div>
 
-                {loading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                    <span className="ml-2 text-gray-600">Setting up secure payment...</span>
-                  </div>
-                ) : clientSecret && stripePromise ? (
-                  <Elements 
-                    stripe={stripePromise} 
-                    options={{
-                      clientSecret,
-                      appearance: {
-                        theme: 'stripe',
-                        variables: {
-                          colorPrimary: '#2563eb',
-                          colorBackground: '#ffffff',
-                          colorText: '#1f2937',
-                          colorDanger: '#dc2626',
-                          fontFamily: 'system-ui, sans-serif',
-                          spacingUnit: '4px',
-                          borderRadius: '8px'
-                        }
-                      }
-                    }}
-                  >
-                    <CheckoutForm
-                      onPaymentSuccess={handlePaymentSuccess}
-                      customerInfo={customerInfo}
-                      setCustomerInfo={setCustomerInfo}
-                      shippingAddress={shippingAddress}
-                      setShippingAddress={setShippingAddress}
-                      billingAddress={billingAddress}
-                      setBillingAddress={setBillingAddress}
-                      sameBillingAddress={sameBillingAddress}
-                      setSameBillingAddress={setSameBillingAddress}
-                      total={total}
-                    />
-                  </Elements>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">Unable to load payment form. Please refresh the page.</p>
+                {!user && (
+                  <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h3 className="text-lg font-medium mb-4 text-blue-900">Guest Checkout</h3>
+                    <p className="text-blue-800 text-sm">
+                      You're checking out as a guest. Please fill out all required information in the form below.
+                    </p>
                   </div>
                 )}
+                
+                <ManualPaymentForm
+                  onPaymentSubmitted={handleManualPayment}
+                  orderNumber={`ST-${Date.now()}`}
+                  amount={total}
+                  isProcessing={orderProcessing}
+                  setIsProcessing={setOrderProcessing}
+                  customerInfo={customerInfo}
+                  setCustomerInfo={setCustomerInfo}
+                  shippingAddress={shippingAddress}
+                  setShippingAddress={setShippingAddress}
+                  isGuestCheckout={!user}
+                />
               </div>
             </div>
           </div>

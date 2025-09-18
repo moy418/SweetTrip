@@ -1,360 +1,183 @@
-# Sweet Trip - E-commerce Platform
+# Supabase CLI
 
-**Discover Candy from Around the World**
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
+](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
 
-A complete self-hosted Shopify-style e-commerce platform for selling exotic and international candies online. Built with modern web technologies for a professional, scalable solution.
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-![Sweet Trip Logo](public/sweetland-logo.jpeg)
+This repository contains all the functionality for Supabase CLI.
 
-## 🎯 Project Overview
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Creating and deploying Supabase Functions
+- [x] Generating types directly from your database schema
+- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
 
-Sweet Trip is a full-featured e-commerce platform designed to compete with Shopify while being completely self-hosted. It offers all the essential features needed to run a successful online candy store, from product management to order processing.
+## Getting started
 
-### ✨ Key Features
+### Install the CLI
 
-#### Customer Features
-- **Modern Shopping Experience**: Responsive design optimized for all devices
-- **Product Catalog**: Browse exotic candies from around the world
-- **Advanced Search & Filtering**: Find products by country, brand, price, and more
-- **Shopping Cart**: Persistent cart with real-time updates
-- **Secure Checkout**: Complete order processing with payment integration ready
-- **User Accounts**: Registration, login, and profile management
-- **Wishlist**: Save favorite products for later
-- **Product Reviews**: Customer ratings and reviews system
-- **Multi-currency Support**: Shop in preferred currency
-- **Free Shipping**: Automatic free shipping on orders over $60
+Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 
-#### Business Features
-- **Inventory Management**: Real-time stock tracking
-- **Order Management**: Complete order lifecycle management
-- **Discount System**: Coupon codes and promotional pricing
-- **Admin Dashboard**: Comprehensive management interface
-- **Analytics Ready**: Built-in tracking capabilities
-- **SEO Optimized**: Search engine friendly URLs and structure
-- **Mobile-First Design**: Optimized for mobile commerce
-
-#### Technical Features
-- **Self-Hosted**: Complete control over your platform
-- **Modern Stack**: React 18, TypeScript, TailwindCSS
-- **Real-time Updates**: Powered by Supabase
-- **Scalable Architecture**: PostgreSQL database
-- **Secure Authentication**: JWT-based user management
-- **File Upload**: Product image management
-- **API-First Design**: RESTful API architecture
-
-## 🛠 Technology Stack
-
-### Frontend
-- **React 18.3** - Modern UI framework
-- **TypeScript** - Type-safe development
-- **Vite 6.0** - Fast build tool
-- **TailwindCSS** - Utility-first styling
-- **React Router** - Client-side routing
-- **React Query** - Data fetching and caching
-- **Zustand** - State management
-- **React Hook Form** - Form management
-- **Framer Motion** - Animations
-
-### Backend
-- **Supabase** - Backend-as-a-Service
-- **PostgreSQL** - Robust database
-- **Edge Functions** - Serverless functions
-- **Real-time Subscriptions** - Live updates
-- **Row Level Security** - Data protection
-
-### Design System
-- **Vibrant Color Scheme** - Bright blues and playful accents
-- **Shopify-Inspired UI** - Professional e-commerce design
-- **Lucide Icons** - Consistent iconography
-- **Responsive Grid** - Mobile-first approach
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 18+
-- PNPM (recommended) or NPM
-- Supabase account (for backend services)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd sweet-trip-ecommerce
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
-
-3. **Configure environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your Supabase credentials
-   ```
-
-4. **Start development server**
-   ```bash
-   pnpm dev
-   ```
-
-5. **Build for production**
-   ```bash
-   pnpm build
-   ```
-
-## 📊 Database Schema
-
-The platform uses a comprehensive database schema:
-
-### Core Tables
-- **categories** - Product categorization
-- **products** - Main product catalog
-- **profiles** - User profile data
-- **orders** - Order management
-- **order_items** - Order line items
-- **cart_items** - Shopping cart persistence
-- **wishlists** - Customer wishlists
-- **reviews** - Product reviews and ratings
-- **coupons** - Discount codes
-- **shipping_zones** - Shipping configuration
-
-### Sample Data Included
-- **18 Products** from 6 categories
-- **International Brands**: Kit Kat, Pocky, Feastables, Haribo, and more
-- **Authentic Origins**: Japan, Korea, USA, Europe, and exotic locations
-- **Sample Coupons**: WELCOME10, SWEET20, FREESHIP, BULK15
-- **Shipping Zones**: USA, Canada, Europe, Asia Pacific, Rest of World
-
-## 🎨 Design Philosophy
-
-### Visual Identity
-- **Primary Colors**: Bright blue (#2563EB) inspired by SWEETLAND branding
-- **Accent Colors**: Cyan, teal, yellow, and vibrant highlights
-- **Typography**: Clean, modern fonts with excellent readability
-- **Imagery**: High-quality product photos with consistent styling
-
-### User Experience
-- **Intuitive Navigation**: Clear category structure and search
-- **Fast Performance**: Optimized loading and smooth interactions
-- **Accessibility**: WCAG compliant design patterns
-- **Mobile-First**: Touch-friendly interface on all devices
-
-## 🌍 International Products Catalog
-
-### Japanese Snacks
-- Kit Kat Matcha Green Tea
-- Kit Kat Sake Flavor
-- Pocky Strawberry
-- Japanese Mochi Mix
-
-### Korean Treats
-- Pocari Sweat Candy
-- Korean Honey Butter Chips
-- Choco Pie Original
-
-### American Favorites
-- Feastables Milk Chocolate
-- Feastables Dark Chocolate
-- American Candy Mix
-
-### European Delights
-- Belgian Chocolate Truffles
-- German Haribo Gummy Bears
-- Swiss Alpine Chocolate
-
-### Exotic International
-- Thai Coconut Candy
-- Mexican Chili Lollipops
-- Brazilian Brigadeiro Bites
-
-### Chocolate Collection
-- Premium Dark Chocolate 85%
-- Milk Chocolate Hazelnut
-- White Chocolate Raspberry
-
-## 🔧 Configuration
-
-### Environment Variables
-```env
-# Supabase Configuration
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# Optional: Analytics
-VITE_GA_TRACKING_ID=your_google_analytics_id
-```
-
-### Customization
-- **Brand Colors**: Edit `tailwind.config.js`
-- **Product Categories**: Update database and navigation
-- **Shipping Rates**: Configure in shipping_zones table
-- **Currency**: Modify price formatting functions
-
-## 📱 API Integration
-
-### Supabase Edge Functions
-- **image-upload**: Secure file upload handling
-- **inventory-management**: Stock level operations
-- **order-processing**: Complete order workflow
-- **payment-processing**: Payment integration ready
-
-### External APIs Ready
-- **Stripe**: Payment processing integration
-- **SendGrid**: Email notifications
-- **Google Analytics**: E-commerce tracking
-- **Shipstation**: Shipping management
-
-## 🛡 Security Features
-
-### Authentication
-- JWT-based user sessions
-- Email verification
-- Password strength requirements
-- Account recovery system
-
-### Data Protection
-- Row Level Security (RLS)
-- Input validation and sanitization
-- CORS configuration
-- Rate limiting ready
-
-### Payment Security
-- Stripe-ready integration
-- PCI compliance architecture
-- Secure checkout flow
-- Fraud prevention ready
-
-## 📈 Performance Optimizations
-
-### Frontend
-- Code splitting and lazy loading
-- Image optimization
-- Caching strategies
-- Bundle size optimization (710KB gzipped)
-
-### Backend
-- Database indexing
-- Query optimization
-- Real-time subscriptions
-- Edge function deployment
-
-### SEO
-- Semantic HTML structure
-- Meta tags optimization
-- Open Graph integration
-- Sitemap generation ready
-
-## 🚀 Deployment Options
-
-### Self-Hosted (Recommended)
-See [DEPLOYMENT.md](DEPLOYMENT.md) for complete Linux server setup guide.
-
-### Cloud Platforms
-- **Vercel**: Frontend deployment
-- **Netlify**: Static site hosting
-- **DigitalOcean**: Full-stack deployment
-- **AWS/GCP**: Enterprise deployment
-
-### Docker Support
 ```bash
-# Build Docker image
-docker build -t sweet-trip .
-
-# Run container
-docker run -p 3000:3000 sweet-trip
+npm i supabase --save-dev
 ```
 
-## 🧪 Testing
+To install the beta release channel:
 
-### Development Testing
 ```bash
-# Run development server
-pnpm dev
-
-# Build and preview
-pnpm build && pnpm preview
+npm i supabase@beta --save-dev
 ```
 
-### Production Testing
+When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+
+```
+NODE_OPTIONS=--no-experimental-fetch yarn add supabase
+```
+
+> **Note**
+For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
+
+<details>
+  <summary><b>macOS</b></summary>
+
+  Available via [Homebrew](https://brew.sh). To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To install the beta release channel:
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Windows</b></summary>
+
+  Available via [Scoop](https://scoop.sh). To install:
+
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
+
+  To upgrade:
+
+  ```powershell
+  scoop update supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Linux</b></summary>
+
+  Available via [Homebrew](https://brew.sh) and Linux packages.
+
+  #### via Homebrew
+
+  To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+
+  #### via Linux packages
+
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
+
 ```bash
-# Build for production
-pnpm build
-
-# Serve production build
-npx serve dist
+supabase bootstrap
 ```
 
-## 📝 Contributing
+Or using npx:
 
-### Development Workflow
-1. Fork the repository
-2. Create feature branch
-3. Make changes
-4. Test thoroughly
-5. Submit pull request
+```bash
+npx supabase bootstrap
+```
 
-### Code Standards
-- TypeScript strict mode
-- ESLint configuration
-- Prettier formatting
-- Component-based architecture
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
 
-## 📞 Support
+## Docs
 
-### Documentation
-- [Deployment Guide](DEPLOYMENT.md)
-- [API Documentation](docs/api.md)
-- [Component Library](docs/components.md)
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
 
-### Community
-- GitHub Issues for bug reports
-- Discussions for feature requests
-- Wiki for additional documentation
+## Breaking changes
 
-## 📄 License
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) file for details.
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
 
-## 🙏 Acknowledgments
+## Developing
 
-- **SWEETLAND Branding**: Logo and visual inspiration
-- **Supabase**: Backend infrastructure
-- **TailwindCSS**: Design system foundation
-- **Lucide**: Icon library
-- **React Community**: Framework and ecosystem
+To run from source:
 
----
-
-**Sweet Trip** - *Discover Candy from Around the World*
-
-Built with ❤️ for candy lovers everywhere
-
----
-
-## 🎯 Live Demo
-
-**Deployed Website**: [Sweet Trip E-commerce](https://jt78e35lez58.space.minimax.io)
-
-Explore the full functionality including:
-- Product browsing and search
-- Shopping cart and checkout
-- User registration and login
-- Admin dashboard
-- Mobile-responsive design
-
-*Note: This is a demo deployment. For production use, follow the deployment guide for your own server setup.*
-
-## 🔄 Recent updates
-
-These are the UI and UX improvements made recently (local dev changes):
-
-- Moved the animated video logo into its own centered "Video Showcase" section so it no longer floats over the hero.
-- Restored the video in the "Experience Sweet Trip" section and created a dedicated `CenteredVideo` section for a centred presentation.
-- Increased the number of floating emojis/candies in the hero for a livelier design (desktop & mobile tweaks).
-- Harmonized the top banners with the footer visual style (dark background, white text, shadow) for consistent header/footer UI.
-- Added a working theme toggle (light/dark) and language selector (EN/ES) in the header. Preferences persist in localStorage.
-- Minor fixes to JSX and responsive layout; verified builds with Vite.
-
-If you'd like these changes split into a separate feature branch and a PR instead of being pushed directly to `main`, tell me and I'll create it.
+```sh
+# Go >= 1.22
+go run . help
+```

@@ -26,7 +26,15 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await signIn(email, password)
-      navigate(from, { replace: true })
+      
+      // Check if user came from checkout
+      const checkoutRedirect = sessionStorage.getItem('checkout_redirect')
+      if (checkoutRedirect) {
+        sessionStorage.removeItem('checkout_redirect')
+        navigate('/checkout', { replace: true })
+      } else {
+        navigate(from, { replace: true })
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in')
     } finally {

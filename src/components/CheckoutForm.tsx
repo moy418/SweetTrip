@@ -5,7 +5,7 @@ import {
   useStripe,
   useElements
 } from '@stripe/react-stripe-js'
-import { Loader2, CreditCard, MapPin, User, Mail, Phone } from 'lucide-react'
+import { Loader2, CreditCard, MapPin, User, Mail, Phone, UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface CheckoutFormProps {
@@ -24,6 +24,7 @@ interface CheckoutFormProps {
   sameBillingAddress: boolean
   setSameBillingAddress: (same: boolean) => void
   total: number
+  isGuestCheckout?: boolean
 }
 
 export default function CheckoutForm({
@@ -36,7 +37,8 @@ export default function CheckoutForm({
   setBillingAddress,
   sameBillingAddress,
   setSameBillingAddress,
-  total
+  total,
+  isGuestCheckout = false
 }: CheckoutFormProps) {
   const stripe = useStripe()
   const elements = useElements()
@@ -62,6 +64,20 @@ export default function CheckoutForm({
     if (!customerInfo.email || !customerInfo.firstName || !customerInfo.lastName) {
       toast.error('Please fill in all required customer information')
       setCurrentStep(1)
+      return
+    }
+
+    // Additional validation for guest checkout
+    if (isGuestCheckout && !customerInfo.phone) {
+      toast.error('Phone number is required for guest checkout')
+      setCurrentStep(1)
+      return
+    }
+
+    // Validate shipping address for guest checkout
+    if (isGuestCheckout && (!shippingAddress.line1 || !shippingAddress.city || !shippingAddress.state || !shippingAddress.postal_code)) {
+      toast.error('Please fill in all shipping address fields')
+      setCurrentStep(2)
       return
     }
 
@@ -115,6 +131,18 @@ export default function CheckoutForm({
         toast.error('Please fill in all required fields')
         return
       }
+      // Additional validation for guest checkout
+      if (isGuestCheckout && !customerInfo.phone) {
+        toast.error('Phone number is required for guest checkout')
+        return
+      }
+    }
+    if (currentStep === 2) {
+      // Validate shipping address for guest checkout
+      if (isGuestCheckout && (!shippingAddress.line1 || !shippingAddress.city || !shippingAddress.state || !shippingAddress.postal_code)) {
+        toast.error('Please fill in all shipping address fields')
+        return
+      }
     }
     setCurrentStep(currentStep + 1)
   }
@@ -125,6 +153,21 @@ export default function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Guest Checkout Header */}
+      {isGuestCheckout && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center space-x-2">
+            <UserPlus className="h-5 w-5 text-blue-600" />
+            <div>
+              <h3 className="font-semibold text-blue-800">Checkout como Invitado</h3>
+              <p className="text-sm text-blue-700">
+                Completa toda la información requerida para procesar tu pedido
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Step Indicator */}
       <div className="flex items-center justify-between mb-8">
         {[1, 2, 3].map((step) => (
