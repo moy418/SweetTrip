@@ -1,3 +1,93 @@
+## SweetTrip — Trabajo desde otra máquina y Cloudflare Tunnel
+
+### Requisitos
+- Node.js 18+ y pnpm
+- Git
+
+### Clonar y cambiar a la rama de trabajo
+```bash
+git clone https://github.com/moy418/SweetTrip
+cd SweetTrip
+git fetch
+git checkout chore/sync-to-github
+```
+
+### Instalar dependencias y ejecutar
+- Desarrollo (Vite en 0.0.0.0:4001):
+```bash
+pnpm i
+pnpm dev
+```
+- Build y preview:
+```bash
+pnpm build
+pnpm preview
+```
+
+### Variables de entorno (.env)
+Crear un archivo `.env` en la raíz con:
+```bash
+# Supabase
+VITE_SUPABASE_URL="https://<tu-proyecto>.supabase.co"
+VITE_SUPABASE_ANON_KEY="<tu_anon_key>"
+
+# Stripe
+VITE_STRIPE_PUBLISHABLE_KEY="<pk_live_o_pk_test>"
+
+# Opcional (scripts/automatizaciones)
+SUPABASE_SERVICE_ROLE_KEY="<service_role_key>"  # usado por update-supabase-config.*
+ZAPIER_WEBHOOK_URL="<webhook_url>"              # opcional si se usa orderProcessor
+```
+
+Nota: Si vas a exponer el dev server con un subdominio distinto (ej. `dev.sweettripcandy.com`), añade ese host en `vite.config.ts` → `server.allowedHosts`.
+
+### Cloudflare Tunnel (dev/proxy seguro)
+Objetivo: exponer `http://localhost:4001` de la máquina de desarrollo a Internet bajo tu dominio en Cloudflare.
+
+1) Instalar `cloudflared` (Linux)
+```bash
+curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
+sudo dpkg -i cloudflared.deb || sudo apt-get -f install -y
+```
+
+2) Autenticarse
+```bash
+cloudflared tunnel login
+```
+
+3) Crear túnel
+```bash
+cloudflared tunnel create sweettrip-dev
+```
+
+4) Configurar ingreso (ingress) al puerto 4001
+Crear `~/.cloudflared/config.yml` (ruta puede variar) con:
+```yaml
+tunnel: sweettrip-dev
+credentials-file: /home/<usuario>/.cloudflared/<UUID>.json
+ingress:
+  - hostname: dev.sweettripcandy.com
+    service: http://localhost:4001
+  - service: http_status:404
+```
+
+5) Crear DNS en Cloudflare para el túnel
+```bash
+cloudflared tunnel route dns sweettrip-dev dev.sweettripcandy.com
+```
+
+6) Ejecutar el túnel
+```bash
+cloudflared tunnel run sweettrip-dev
+```
+
+Consejos:
+- Si usas un subdominio nuevo (p. ej., `dev.sweettripcandy.com`), añade ese host en `vite.config.ts > server.allowedHosts`.
+- El dev server arranca en `http://0.0.0.0:4001`. `cloudflared` hace proxy a ese puerto.
+- Para producción con NGINX, ver `nginx.conf` y el contenido de `dist/`.
+
+---
+
 # Supabase CLI
 
 [![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
