@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronLeft, ChevronRight, Star, Heart } from 'lucide-react'
 import { Product, supabase } from '../lib/supabase'
 import { useCartStore } from '../store/cartStore'
+import { useLanguage } from '../contexts/LanguageContext'
 import toast from 'react-hot-toast'
 
 export default function FeaturedProductsCarousel() {
@@ -13,6 +14,7 @@ export default function FeaturedProductsCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
   const { addItem } = useCartStore()
+  const { t } = useLanguage()
 
   useEffect(() => {
     loadFeaturedProducts()
@@ -123,10 +125,10 @@ export default function FeaturedProductsCarousel() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              🌟 Featured Sweet Treats
+              {t.homepage.featuredTreats}
             </h2>
             <p className="text-gray-600 text-sm md:text-base">
-              Hand-picked favorites from around the world
+              {t.homepage.handPickedFavorites}
             </p>
           </div>
           
@@ -231,7 +233,7 @@ export default function FeaturedProductsCarousel() {
               >
                 <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🍭</div>
                 <h3 className="text-xl font-bold text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
-                  View All Featured
+                  {t.homepage.viewAll}
                 </h3>
                 <p className="text-gray-500 text-center mb-4">
                   Discover more amazing treats from around the world

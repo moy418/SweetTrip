@@ -27,19 +27,61 @@ interface OrderData {
 
 export default function CheckoutSuccessPage() {
   const [searchParams] = useSearchParams()
+  const sessionId = searchParams.get('session_id')
   const orderNumber = searchParams.get('order')
-  const paymentMethod = searchParams.get('payment_method')
   const [orderData, setOrderData] = useState<OrderData | null>(null)
+  const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    if (orderNumber) {
-      const storedOrder = localStorage.getItem(`order_${orderNumber}`)
-      if (storedOrder) {
-        setOrderData(JSON.parse(storedOrder))
+    const fetchOrderData = async () => {
+      if (sessionId) {
+        // Fetch order data using session_id from Stripe
+        try {
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/orders?stripe_checkout_session_id=eq.${sessionId}&select=*`, {
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'apikey': `${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            }
+          })
+          
+          if (response.ok) {
+            const orders = await response.json()
+            if (orders && orders.length > 0) {
+              const order = orders[0]
+              setOrderData({
+                customer_email: order.customer_email,
+                customer_first_name: 'Customer', // Will be filled by webhook
+                customer_last_name: '',
+                customer_phone: '',
+                shipping_address: order.shipping_address ? JSON.parse(order.shipping_address) : null,
+                billing_address: order.billing_address ? JSON.parse(order.billing_address) : null,
+                items: [], // Will be filled by webhook
+                total_amount: order.total_amount,
+                currency: order.currency,
+                payment_method: 'stripe',
+                payment_status: order.status,
+                payment_reference: order.stripe_checkout_session_id,
+                payment_notes: '',
+                payment_timestamp: new Date().toISOString()
+              })
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching order:', error)
+        }
+      } else if (orderNumber) {
+        // Fallback to localStorage for manual orders
+        const storedOrder = localStorage.getItem(`order_${orderNumber}`)
+        if (storedOrder) {
+          setOrderData(JSON.parse(storedOrder))
+        }
       }
+      setLoading(false)
     }
-  }, [orderNumber])
+    
+    fetchOrderData()
+  }, [sessionId, orderNumber])
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -76,17 +118,40 @@ export default function CheckoutSuccessPage() {
     return methods[method] || { name: method, color: 'bg-gray-50 border-gray-200 text-gray-700', instructions: [] }
   }
 
-  if (!orderNumber || !orderData) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Orden no encontrada</h1>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Procesando tu orden...</h1>
+            <p className="text-gray-600">
+              Estamos confirmando tu pago y preparando tu orden.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!orderData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">¡Pago Exitoso!</h1>
+            <p className="text-gray-600 mb-6">
+              Tu pago se procesó correctamente. Recibirás un email de confirmación en breve.
+            </p>
             <Link
               to="/"
-              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
               <span>Volver al inicio</span>
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -94,7 +159,7 @@ export default function CheckoutSuccessPage() {
     )
   }
 
-  const paymentInfo = getPaymentMethodInfo(paymentMethod || orderData.payment_method)
+  const paymentInfo = getPaymentMethodInfo(orderData.payment_method)
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

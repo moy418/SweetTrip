@@ -15,8 +15,12 @@ interface AddressSuggestion {
   components: {
     house_number?: string
     road?: string
+    street?: string
     city?: string
+    town?: string
+    village?: string
     state?: string
+    state_district?: string
     postcode?: string
     country?: string
   }

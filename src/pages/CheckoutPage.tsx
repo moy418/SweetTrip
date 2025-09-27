@@ -1,74 +1,38 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ShoppingBag, Lock, CreditCard, ArrowLeft } from 'lucide-react'
+import { ShoppingBag, Lock, ArrowLeft, CreditCard } from 'lucide-react'
 import { useCartStore } from '../store/cartStore'
 import { useAuth } from '../contexts/AuthContext'
-import ManualPaymentForm from '../components/ManualPaymentForm'
-import { sendOrderConfirmationEmail } from '../lib/emailService'
 import toast from 'react-hot-toast'
-import { buildOrderWebhookPayload, sendOrderWebhookToZapier } from '../lib/orderProcessor'
 
 export default function CheckoutPage() {
   const { items, getTotalPrice, clearCart } = useCartStore()
   const { user } = useAuth()
   const navigate = useNavigate()
-  
-  const [orderProcessing, setOrderProcessing] = useState(false)
-  const [customerInfo, setCustomerInfo] = useState({
-    email: user?.email || '',
-    firstName: '',
-    lastName: '',
-    phone: ''
-  })
-  const [shippingAddress, setShippingAddress] = useState({
-    line1: '',
-    line2: '',
-    city: '',
-    state: '',
-    postal_code: '',
-    country: 'US'
-  })
-  const [billingAddress, setBillingAddress] = useState({
-    line1: '',
-    line2: '',
-    city: '',
-    state: '',
-    postal_code: '',
-    country: 'US'
-  })
-  const [sameBillingAddress, setSameBillingAddress] = useState(true)
-  
+  const [loading, setLoading] = useState(false)
+
   const subtotal = getTotalPrice()
   const shippingCost = subtotal >= 60 ? 0 : 5.99
   const total = subtotal + shippingCost
 
-  useEffect(() => {
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(price)
+  }
+
+  const handleCheckout = async () => {
     if (items.length === 0) {
+      toast.error('Tu carrito está vacío')
       navigate('/cart')
       return
     }
-    
-    // Update email if user is logged in
-    if (user?.email) {
-      setCustomerInfo(prev => ({ ...prev, email: user.email || '' }))
-    }
-  }, [items, user])
 
-
-  const handleManualPayment = async (paymentMethod: string, paymentDetails: any) => {
-    // Prevent duplicate orders
-    if (orderProcessing) {
-      console.log('Order already processing, ignoring duplicate request')
-      return
-    }
+    setLoading(true)
 
     try {
-      setOrderProcessing(true)
-      
-      // Create order directly without Stripe
-      const orderNumber = `ST-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`
-      
-      // Prepare cart items for the backend
+      // Prepare cart items for Stripe
       const cartItems = items.map(item => ({
         product_id: item.product.id,
         product_name: item.product.name,
@@ -78,171 +42,54 @@ export default function CheckoutPage() {
         origin_country: item.product.origin_country || null
       }))
 
-      // Calculate correct total based on delivery method
-      const finalShippingCost = paymentDetails.deliveryMethod === 'pickup' ? 0 : shippingCost
-      const finalTotal = subtotal + finalShippingCost
-
-      // Create order in Supabase - using only existing columns
-      const orderData = {
-        user_id: user?.id || null,
-        order_number: orderNumber,
-        status: 'pending',
-        total_amount: finalTotal,
-        currency: 'usd',
-        shipping_cost: finalShippingCost,
-        shipping_address: paymentDetails.deliveryMethod === 'shipping' ? paymentDetails.shippingAddress : null,
-        billing_address: paymentDetails.shippingAddress || null,
-        customer_email: paymentDetails.customerInfo?.email || user?.email || 'guest@sweettripcandy.com',
-        // Store additional info in a custom field or notes
-        stripe_payment_intent_id: `manual_${paymentMethod}_${paymentDetails.reference || 'no_ref'}`
-      }
-
-      console.log('Creating manual payment order:', orderData)
-      console.log('Payment details received:', paymentDetails)
-
-      // Create order directly in Supabase (simplified version)
-      const response = await fetch('https://pmqcegwfucfbwwmwumkk.supabase.co/rest/v1/orders', {
+      // Create Stripe Checkout Session
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtcWNlZ3dmdWNmYnd3bXd1bWtrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM1Nzc3MywiZXhwIjoyMDcyOTMzNzczfQ.pot5CZbduD_utBRXA8VkjHp-q_QlvHDl0tPMN5RHNAI',
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtcWNlZ3dmdWNmYnd3bXd1bWtrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM1Nzc3MywiZXhwIjoyMDcyOTMzNzczfQ.pot5CZbduD_utBRXA8VkjHp-q_QlvHDl0tPMN5RHNAI',
-          'Prefer': 'return=representation'
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
         },
-        body: JSON.stringify(orderData)
-      })
-
-      console.log('Order creation response status:', response.status)
-      
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Failed to create order:', errorText)
-        throw new Error(`Error ${response.status}: ${errorText}`)
-      }
-
-      const order = await response.json()
-      console.log('Order creation result:', order)
-      
-      if (!order || !Array.isArray(order) || order.length === 0) {
-        throw new Error('Invalid order response from server')
-      }
-
-      const orderId = order[0].id
-      console.log('Order created successfully:', orderId)
-
-      // Create order items
-      const orderItemsData = cartItems.map(item => ({
-        order_id: orderId,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price_at_time: item.price,
-        product_name: item.product_name,
-        product_image_url: item.product_image_url,
-        country_code: item.origin_country || null
-      }))
-
-      // Save order items
-      const itemsResponse = await fetch('https://pmqcegwfucfbwwmwumkk.supabase.co/rest/v1/order_items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtcWNlZ3dmdWNmYnd3bXd1bWtrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM1Nzc3MywiZXhwIjoyMDcyOTMzNzczfQ.pot5CZbduD_utBRXA8VkjHp-q_QlvHDl0tPMN5RHNAI',
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtcWNlZ3dmdWNmYnd3bXd1bWtrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM1Nzc3MywiZXhwIjoyMDcyOTMzNzczfQ.pot5CZbduD_utBRXA8VkjHp-q_QlvHDl0tPMN5RHNAI'
-        },
-        body: JSON.stringify(orderItemsData)
-      })
-
-      if (!itemsResponse.ok) {
-        console.error('Failed to create order items, but continuing...')
-      } else {
-        console.log('Order items created successfully')
-      }
-      
-      // ✅ SEND STRUCTURED WEBHOOK TO ZAPIER (centralized module)
-      try {
-        const webhookPayload = buildOrderWebhookPayload({
-          orderNumber,
-          customerFirstName: paymentDetails.customerInfo?.firstName,
-          customerLastName: paymentDetails.customerInfo?.lastName,
-          customerEmail: paymentDetails.customerInfo?.email || orderData.customer_email,
-          totalAmount: finalTotal,
-          deliveryMethod: paymentDetails.deliveryMethod || 'shipping',
-          shippingAddress: paymentDetails.shippingAddress,
-          items: cartItems
+        body: JSON.stringify({
+          cartItems,
+          customerEmail: user?.email || '',
+          successUrl: `${window.location.origin}/checkout/success`,
+          cancelUrl: `${window.location.origin}/cart`
         })
-        await sendOrderWebhookToZapier(webhookPayload)
-        console.log('✅ Webhook sent to Zapier successfully')
-      } catch (webhookError) {
-        console.error('❌ Error sending webhook to Zapier:', webhookError)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error?.message || 'Error al crear la sesión de pago')
       }
 
-      // Send notification to customer
-      try {
-        const notificationData = {
-          orderNumber,
-          customerName: `${paymentDetails.customerInfo?.firstName || 'Guest'} ${paymentDetails.customerInfo?.lastName || 'Customer'}`,
-          customerEmail: paymentDetails.customerInfo?.email || orderData.customer_email,
-          customerPhone: paymentDetails.customerInfo?.phone || '',
-          paymentMethod,
-          paymentReference: paymentDetails.reference || '',
-          deliveryMethod: paymentDetails.deliveryMethod || 'shipping',
-          shippingAddress: paymentDetails.deliveryMethod === 'shipping' ? paymentDetails.shippingAddress : null,
-          orderItems: cartItems.map(item => ({
-            product_name: item.product_name,
-            quantity: item.quantity,
-            price: item.price
-          })),
-          totalAmount: finalTotal,
-          shippingCost: finalShippingCost
-        }
-
-        console.log('Sending order notification:', notificationData)
-        
-        const emailSent = await sendOrderConfirmationEmail(notificationData)
-        
-        if (emailSent) {
-          toast.success(`¡Orden ${orderNumber} creada exitosamente! Revisa tu email para los detalles.`)
-        } else {
-          toast.success(`¡Orden ${orderNumber} creada exitosamente! Nos pondremos en contacto contigo pronto.`)
-        }
-      } catch (error) {
-        console.error('Error sending notification:', error)
-        toast.success(`¡Orden ${orderNumber} creada exitosamente! Nos pondremos en contacto contigo pronto.`)
-      }
+      const { url } = await response.json()
       
-      // Clear cart and redirect
+      // Clear cart before redirecting
       clearCart()
-      navigate(`/checkout/success?order_number=${orderNumber}&payment_method=${paymentMethod}`)
       
-    } catch (error) {
-      console.error('Error submitting manual payment:', error)
-      toast.error('Error al crear la orden. Por favor intenta de nuevo.')
-    } finally {
-      setOrderProcessing(false)
-    }
-  }
+      // Redirect to Stripe Checkout
+      window.location.href = url
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(price)
+    } catch (error) {
+      console.error('Checkout error:', error)
+      toast.error(error instanceof Error ? error.message : 'Error al procesar el checkout')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <ShoppingBag className="h-24 w-24 text-gray-300 mx-auto mb-6" />
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
-            <Link
-              to="/products"
-              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
-              <span>Continue Shopping</span>
-            </Link>
-          </div>
+        <div className="max-w-2xl mx-auto px-4 text-center">
+          <ShoppingBag className="h-24 w-24 text-gray-300 mx-auto mb-6" />
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Tu carrito está vacío</h1>
+          <Link
+            to="/products"
+            className="inline-flex items-center space-x-2 bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+          >
+            <span>Continuar Comprando</span>
+          </Link>
         </div>
       </div>
     )
@@ -250,99 +97,156 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center space-x-4 mb-8">
-            <Link
-              to="/cart"
-              className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              <span>Back to Cart</span>
-            </Link>
-            <div className="flex items-center space-x-2">
-              <Lock className="h-5 w-5 text-green-600" />
-              <span className="text-sm text-gray-600">Secure Checkout</span>
-            </div>
-          </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex items-center mb-8">
+          <Link 
+            to="/cart" 
+            className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Volver al Carrito
+          </Link>
+        </div>
 
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Order Summary */}
-            <div className="order-2 lg:order-1">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
-                
-                {/* Items */}
-                <div className="space-y-4 mb-6">
-                  {items.map((item) => (
-                    <div key={item.product.id} className="flex items-center space-x-4">
-                      <img
-                        src={item.product.image_urls?.[0] || '/candy-fallback.jpg'}
-                        alt={item.product.name}
-                        className="w-16 h-16 rounded-lg object-cover"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">{item.product.name}</h3>
-                        <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{formatPrice(item.product.price * item.quantity)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Totals */}
-                <div className="border-t pt-4 space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>{formatPrice(subtotal)}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Order Summary */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center space-x-2 mb-6">
+              <ShoppingBag className="h-5 w-5 text-blue-600" />
+              <h2 className="text-xl font-semibold text-gray-900">Resumen de Orden</h2>
+            </div>
+
+            {/* Cart Items */}
+            <div className="space-y-4 mb-6">
+              {items.map((item) => (
+                <div key={item.product.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                  <img
+                    src={item.product.image_urls?.[0] || '/placeholder.jpg'}
+                    alt={item.product.name}
+                    className="w-16 h-16 object-cover rounded-lg"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900">{item.product.name}</h3>
+                    <p className="text-sm text-gray-500">Cantidad: {item.quantity}</p>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span>{shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}</span>
-                  </div>
-                  {shippingCost > 0 && (
-                    <p className="text-sm text-gray-500">Free shipping on orders over $60</p>
-                  )}
-                  <div className="flex justify-between text-lg font-semibold border-t pt-2">
-                    <span>Total</span>
-                    <span>{formatPrice(total)}</span>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900">
+                      {formatPrice(item.product.price * item.quantity)}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {formatPrice(item.product.price)} c/u
+                    </p>
                   </div>
                 </div>
+              ))}
+            </div>
+
+            {/* Order Totals */}
+            <div className="border-t pt-4 space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Subtotal</span>
+                <span className="text-gray-900">{formatPrice(subtotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">
+                  Envío {subtotal >= 60 && <span className="text-green-600 text-sm">(¡Gratis!)</span>}
+                </span>
+                <span className="text-gray-900">{formatPrice(shippingCost)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-semibold pt-2 border-t">
+                <span className="text-gray-900">Total</span>
+                <span className="text-blue-600">{formatPrice(total)}</span>
               </div>
             </div>
 
-            {/* Checkout Form */}
-            <div className="order-1 lg:order-2">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center space-x-2 mb-6">
-                  <CreditCard className="h-5 w-5 text-blue-600" />
-                  <h2 className="text-xl font-semibold">Payment Information</h2>
-                </div>
+            {/* Free Shipping Notice */}
+            {subtotal < 60 && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  💡 Añade {formatPrice(60 - subtotal)} más para obtener envío gratuito
+                </p>
+              </div>
+            )}
+          </div>
 
-                {!user && (
-                  <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h3 className="text-lg font-medium mb-4 text-blue-900">Guest Checkout</h3>
-                    <p className="text-blue-800 text-sm">
-                      You're checking out as a guest. Please fill out all required information in the form below.
-                    </p>
-                  </div>
-                )}
-                
-                <ManualPaymentForm
-                  onPaymentSubmitted={handleManualPayment}
-                  orderNumber={`ST-${Date.now()}`}
-                  amount={total}
-                  isProcessing={orderProcessing}
-                  setIsProcessing={setOrderProcessing}
-                  customerInfo={customerInfo}
-                  setCustomerInfo={setCustomerInfo}
-                  shippingAddress={shippingAddress}
-                  setShippingAddress={setShippingAddress}
-                  isGuestCheckout={!user}
-                />
+          {/* Checkout Button */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center space-x-2 mb-6">
+              <CreditCard className="h-5 w-5 text-blue-600" />
+              <h2 className="text-xl font-semibold text-gray-900">Checkout Seguro</h2>
+            </div>
+
+            {/* User Info */}
+            {user ? (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-800">
+                  ✅ Conectado como: <strong>{user.email}</strong>
+                </p>
+              </div>
+            ) : (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  💡 Puedes completar tu compra como invitado o{' '}
+                  <Link to="/login" className="font-semibold underline">
+                    iniciar sesión
+                  </Link>
+                </p>
+              </div>
+            )}
+
+            {/* Stripe Checkout Info */}
+            <div className="mb-6 space-y-4">
+              <h3 className="text-lg font-medium text-gray-900">¿Qué incluye el pago seguro?</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center space-x-2">
+                  <span className="text-green-500">✓</span>
+                  <span>Formulario de pago seguro de Stripe</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="text-green-500">✓</span>
+                  <span>Información de envío y facturación</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="text-green-500">✓</span>
+                  <span>Soporte para tarjetas y wallets digitales</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="text-green-500">✓</span>
+                  <span>Confirmación automática por email</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Checkout Button */}
+            <button
+              onClick={handleCheckout}
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                  <span>Creando Checkout...</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="h-5 w-5" />
+                  <span>Pagar {formatPrice(total)} con Stripe</span>
+                </>
+              )}
+            </button>
+
+            {/* Security Notice */}
+            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <Lock className="h-5 w-5 text-green-600" />
+                <div>
+                  <h3 className="font-medium text-green-800">Pago 100% Seguro</h3>
+                  <p className="text-sm text-green-700 mt-1">
+                    Serás redirigido a la página de pago segura de Stripe, el procesador de pagos más confiable del mundo.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

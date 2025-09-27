@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart, User, Search, Menu, X, Heart, Trophy, Globe2, Target, Star, TrendingUp, ChevronDown, Calendar, Flag } from 'lucide-react'
+import { ShoppingCart, User, Search, Menu, X, Heart, Trophy, Globe2, Target, Star, TrendingUp, ChevronDown, Calendar } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useCartStore } from '../store/cartStore'
 import { supabase } from '../lib/supabase'
 import NotificationCenter from './NotificationCenter'
 import { useHeaderScroll } from '../hooks/useScrollBehavior'
+import { useLanguage } from '../contexts/LanguageContext'
 import toast from 'react-hot-toast'
 
 interface Category {
@@ -20,28 +21,21 @@ interface Region {
   slug: string
 }
 
-interface Country {
-  id: string
-  country_name: string
-  country_code: string
-  flag_emoji: string
-}
 
 export default function Header() {
   const { user, profile, signOut } = useAuth()
   const { toggleCart, getTotalItems } = useCartStore()
+  const { t, language, setLanguage } = useLanguage()
   const navigate = useNavigate()
+  
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   // Usar el hook personalizado para el comportamiento del scroll
   const { isScrolled, isScrollingDown } = useHeaderScroll()
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
-  const [isRegionsOpen, setIsRegionsOpen] = useState(false)
-  const [isCountriesOpen, setIsCountriesOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [regions, setRegions] = useState<Region[]>([])
-  const [countries, setCountries] = useState<Country[]>([])
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -58,8 +52,6 @@ export default function Header() {
       }
       
       setIsCategoriesOpen(false)
-      setIsRegionsOpen(false)
-      setIsCountriesOpen(false)
     }
     
     document.addEventListener('click', handleClickOutside)
@@ -106,7 +98,6 @@ export default function Header() {
   }
 
   const [theme, setTheme] = React.useState<'light'|'dark'>(() => (typeof window !== 'undefined' && localStorage.getItem('site-theme')) as 'light'|'dark' || 'light')
-  const [lang, setLang] = React.useState<'en'|'es'>(() => (typeof window !== 'undefined' && (localStorage.getItem('site-lang') as 'en'|'es')) || 'en')
 
   React.useEffect(() => {
     if (typeof window === 'undefined') return
@@ -116,10 +107,6 @@ export default function Header() {
 
   // El comportamiento del scroll ahora se maneja con useHeaderScroll hook
 
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return
-    localStorage.setItem('site-lang', lang)
-  }, [lang])
 
   useEffect(() => {
     loadNavigationData()
@@ -151,31 +138,16 @@ export default function Header() {
         console.error('Regions error:', regionsError)
       }
 
-      // Load countries with basic query  
-      const { data: allCountries, error: countriesError } = await supabase
-        .from('countries')
-        .select('id, country_name, country_code, flag_emoji')
-        .limit(100)
-        
-      if (countriesError) {
-        console.error('Countries error:', countriesError)
-      }
-
-      // Filter client-side for specific countries
-      const targetCountries = ['Mexico', 'Japan', 'China', 'South Korea', 'United States', 'Canada', 'Argentina', 'France', 'Spain', 'Italy', 'England']
-      const countriesData = allCountries?.filter(country => targetCountries.includes(country.country_name)) || []
-
       setCategories(categoriesData)
       setRegions(allRegions || [])
-      setCountries(countriesData)
       
-      console.log('Navigation data loaded:', { categories: categoriesData.length, regions: allRegions?.length || 0, countries: countriesData.length })
+      console.log('Navigation data loaded:', { categories: categoriesData.length, regions: allRegions?.length || 0 })
     } catch (error) {
       console.error('Error loading navigation data:', error)
     }
   }
 
-  const bannerText = lang === 'es' ? 'Envío gratis en pedidos sobre $60!' : 'Free shipping on orders over $60!'
+  const bannerText = t.common.freeShipping
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 bg-gray-900 text-white shadow-lg transition-all duration-500 ease-in-out ${
@@ -209,7 +181,7 @@ export default function Header() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={lang === 'es' ? 'Buscar dulces exóticos...' : 'Search for exotic candies...'}
+                   placeholder={t.common.searchPlaceholder}
                   className={`w-full pr-10 border border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-800 text-white transition-all duration-300 ${
                     isScrolled ? 'px-3 py-1.5 text-sm' : 'px-3 py-2'
                   }`}
@@ -224,6 +196,159 @@ export default function Header() {
               </div>
             </form>
           )}
+
+          {/* Navigation - Integrated in Main Header */}
+          <div className="hidden lg:flex items-center space-x-6 flex-1 justify-center">
+            {/* Categories Dropdown - Modern & Simplified */}
+            <div className="relative dropdown-container">
+              {(() => {
+                const { handleMouseEnter, handleMouseLeave } = createHoverHandlers(setIsCategoriesOpen)
+                return (
+                  <div 
+                    className="relative"
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <button 
+                      className="flex items-center space-x-2 px-4 py-2 text-white hover:text-blue-300 font-medium transition-all rounded-lg hover:bg-white/10 group backdrop-blur-sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setIsCategoriesOpen(!isCategoriesOpen)
+                      }}
+                    >
+                      <Target className="h-4 w-4" />
+                      <span>{t.navigation.categories}</span>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isCategoriesOpen && (
+                      <div className="absolute left-0 top-full w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 py-4 z-50 mt-2 transform transition-all duration-300 ease-out">
+                        <div className="px-6 py-4 border-b border-gray-50">
+                          <h3 className="font-bold text-gray-900 text-lg flex items-center space-x-2">
+                            <span className="text-2xl">🍭</span>
+                            <span>Sweet Categories</span>
+                          </h3>
+                          <p className="text-sm text-gray-500 mt-1">Discover treats by type & region</p>
+                        </div>
+                        
+                        {/* By Type Section */}
+                        <div className="px-6 py-3">
+                          <h4 className="font-semibold text-gray-800 text-sm mb-3 flex items-center">
+                            <span className="mr-2">🍫</span>
+                            {t.navigation.byType}
+                          </h4>
+                          <div className="grid grid-cols-2 gap-2 mb-4">
+                            <Link to="/category/chocolate" className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:text-orange-700 transition-all rounded-lg group">
+                              <span className="text-lg">🍫</span>
+                              <span>{t.navigation.chocolate}</span>
+                            </Link>
+                            <Link to="/category/gummies" className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-purple-50 hover:text-pink-700 transition-all rounded-lg group">
+                              <span className="text-lg">🍬</span>
+                              <span>{t.navigation.gummies}</span>
+                            </Link>
+                            <Link to="/category/hard-candy" className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-700 transition-all rounded-lg group">
+                              <span className="text-lg">🍭</span>
+                              <span>{t.navigation.hardCandy}</span>
+                            </Link>
+                            <Link to="/category/salty" className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 hover:text-yellow-700 transition-all rounded-lg group">
+                              <span className="text-lg">🥨</span>
+                              <span>{t.navigation.salty}</span>
+                            </Link>
+                          </div>
+                        </div>
+
+                        {/* By Region Section */}
+                        <div className="px-6 py-3 border-t border-gray-50">
+                          <h4 className="font-semibold text-gray-800 text-sm mb-3 flex items-center">
+                            <span className="mr-2">🌍</span>
+                            {t.navigation.byRegion}
+                          </h4>
+                          <div className="space-y-2">
+                            {regions.slice(0, 4).map((region) => (
+                              <Link
+                                key={region.id}
+                                to={`/region/${region.slug}`}
+                                className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 transition-all rounded-lg group"
+                                onClick={() => setIsCategoriesOpen(false)}
+                              >
+                                <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-purple-500 rounded-md flex items-center justify-center text-white font-bold text-xs">
+                                  {region.name.charAt(0)}
+                                </div>
+                                <span className="font-medium">{region.name}</span>
+                                <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-blue-600">→</span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Special Collections */}
+                        <div className="px-6 py-3 border-t border-gray-50">
+                          <div className="space-y-2">
+                            <Link to="/new-arrivals" className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 hover:text-green-700 transition-all rounded-lg group">
+                              <span className="text-lg">✨</span>
+                              <span>{t.navigation.newArrivals}</span>
+                              <span className="ml-auto bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs font-medium">New</span>
+                            </Link>
+                            <Link to="/worldcup2026" className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:text-orange-700 transition-all rounded-lg group">
+                              <span className="text-lg">⚽</span>
+                              <span>{t.navigation.worldCup2026}</span>
+                              <span className="ml-auto bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full text-xs font-medium">Special</span>
+                            </Link>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-gray-50 mt-2 px-6 py-3">
+                          <Link
+                            to="/categories"
+                            className="flex items-center justify-between text-blue-600 font-semibold hover:text-blue-700 transition-colors group"
+                            onClick={() => setIsCategoriesOpen(false)}
+                          >
+                            <span>View All Categories</span>
+                            <span className="group-hover:translate-x-1 transition-transform">→</span>
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+            </div>
+
+            {/* Featured - Prominent Button */}
+            <Link
+              to="/featured"
+              className="flex items-center space-x-2 px-4 py-2 text-white hover:text-blue-300 font-medium transition-all rounded-lg hover:bg-white/10 group backdrop-blur-sm"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Star className="h-4 w-4" />
+              <span>{t.navigation.featured}</span>
+              <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">Hot</span>
+            </Link>
+
+            {/* About & Contact - Clean Links */}
+            <Link
+              to="/about"
+              className="px-4 py-2 text-white hover:text-blue-300 font-medium transition-all rounded-lg hover:bg-white/10 backdrop-blur-sm"
+              onClick={() => setIsMenuOpen(false)}
+            >
+               {t.navigation.about}
+            </Link>
+            <Link
+              to="/contact"
+              className="px-4 py-2 text-white hover:text-blue-300 font-medium transition-all rounded-lg hover:bg-white/10 backdrop-blur-sm"
+              onClick={() => setIsMenuOpen(false)}
+            >
+               {t.navigation.contact}
+            </Link>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="lg:hidden p-2 text-white hover:text-blue-300 transition-colors"
+            aria-label="Menu"
+          >
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
 
           {/* Right Side Actions - More Compact */}
           <div className="flex items-center space-x-2">
@@ -278,8 +403,8 @@ export default function Header() {
             {/* Language selector */}
             <div className="relative">
               <select
-                value={lang}
-                onChange={(e) => setLang(e.target.value as 'en'|'es')}
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as 'en'|'es')}
                 className="bg-transparent border border-gray-200 text-sm rounded-md px-2 py-1"
                 aria-label="Language"
               >
@@ -349,22 +474,6 @@ export default function Header() {
               </div>
             </div>
 
-            {/* Mobile Search Icon */}
-            <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-blue-600"
-              aria-label="Search"
-            >
-              <Search className="h-6 w-6" />
-            </button>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-blue-600"
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
           </div>
         </div>
 
@@ -376,7 +485,7 @@ export default function Header() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for exotic candies..."
+                placeholder={t.common.searchPlaceholder}
                 className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 autoFocus
               />
@@ -392,287 +501,78 @@ export default function Header() {
       </div>
 
 
-      {/* Navigation - More Compact */}
-      <nav className="bg-gray-50 border-t">
-        <div className="container mx-auto px-4">
-          <div className={`${isMenuOpen ? 'block' : 'hidden'} md:block`}>
-            <ul className="flex flex-col md:flex-row md:space-x-6 py-3 md:py-2">
-              <li>
-                <Link
-                  to="/"
-                  className="block py-2 md:py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors text-sm"
-                  onClick={() => setIsMenuOpen(false)}
+      {/* Mobile Menu - Integrated */}
+      {isMenuOpen && (
+        <div className="lg:hidden bg-gray-900 border-t border-gray-700">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex flex-col space-y-3">
+              {/* Categories */}
+              <div className="relative">
+                <button 
+                  className="flex items-center justify-between w-full px-4 py-3 text-white hover:bg-white/10 font-medium transition-all rounded-lg group"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setIsCategoriesOpen(!isCategoriesOpen)
+                  }}
                 >
-                  Home
-                </Link>
-              </li>
-              
-              {/* World Cup 2026 - Minimized to match new brand focus */}
-              <li className="relative group">
-                <Link
-                  to="/worldcup2026"
-                  className="flex items-center space-x-2 py-2 md:py-4 text-blue-600 hover:text-blue-800 font-medium transition-all"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Calendar className="h-4 w-4" />
-                  <span>World Cup 2026</span>
-                  <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium text-xs">Special</span>
-                </Link>
-              </li>
-              
-              {/* Categories Dropdown */}
-              <li className="relative dropdown-container">
-                {(() => {
-                  const { handleMouseEnter, handleMouseLeave } = createHoverHandlers(setIsCategoriesOpen)
-                  return (
-                    <div 
-                      className="relative"
-                      onMouseEnter={handleMouseEnter}
-                      onMouseLeave={handleMouseLeave}
-                    >
-                      <button 
-                        className="flex items-center space-x-1 py-2 md:py-4 px-2 text-gray-700 hover:text-blue-600 font-medium transition-colors rounded-md hover:bg-gray-50"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setIsCategoriesOpen(!isCategoriesOpen)
-                        }}
-                      >
-                        <span>Categories</span>
-                        <ChevronDown className={`h-4 w-4 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      {isCategoriesOpen && (
-                        <div className="absolute left-0 top-full w-80 bg-white rounded-xl shadow-2xl border border-gray-100 py-3 z-50 mt-1 transform transition-all duration-200 ease-out">
-                          <div className="px-5 py-3 border-b border-gray-50">
-                            <h3 className="font-bold text-gray-900 text-lg flex items-center space-x-2">
-                              <span className="text-xl">🍭</span>
-                              <span>Shop by Category</span>
-                            </h3>
-                            <p className="text-xs text-gray-500 mt-1">Discover treats by type</p>
-                          </div>
-                          <div className="max-h-64 overflow-y-auto">
-                            {categories.length > 0 ? (
-                              categories.map((category) => (
-                                <Link
-                                  key={category.id}
-                                  to={`/category/${category.slug}`}
-                                  className="flex items-center space-x-3 px-5 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:text-orange-700 transition-all duration-200 group"
-                                  onClick={() => setIsCategoriesOpen(false)}
-                                >
-                                  <div className="w-2 h-2 bg-orange-400 rounded-full group-hover:bg-orange-600 transition-colors"></div>
-                                  <span className="font-medium">{category.name}</span>
-                                  <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-orange-600">→</span>
-                                </Link>
-                              ))
-                            ) : (
-                              <div className="px-5 py-4 text-gray-500 text-center">
-                                <div className="animate-spin w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                                <span className="text-sm">Loading categories...</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="border-t border-gray-50 mt-2 px-5 py-3">
-                            <Link
-                              to="/categories"
-                              className="flex items-center justify-between text-orange-600 font-semibold hover:text-orange-700 transition-colors group"
-                              onClick={() => setIsCategoriesOpen(false)}
-                            >
-                              <span>View All Categories</span>
-                              <span className="group-hover:translate-x-1 transition-transform">→</span>
-                            </Link>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })()}
-              </li>
+                  <div className="flex items-center space-x-2">
+                    <Target className="h-4 w-4" />
+                    <span>{t.navigation.categories}</span>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isCategoriesOpen && (
+                  <div className="mt-2 bg-gray-800 rounded-lg p-3 space-y-2">
+                    <Link to="/category/chocolate" className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-all rounded-lg">
+                      <span className="text-lg">🍫</span>
+                      <span>{t.navigation.chocolate}</span>
+                    </Link>
+                    <Link to="/category/gummies" className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-all rounded-lg">
+                      <span className="text-lg">🍬</span>
+                      <span>{t.navigation.gummies}</span>
+                    </Link>
+                    <Link to="/new-arrivals" className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-all rounded-lg">
+                      <span className="text-lg">✨</span>
+                      <span>{t.navigation.newArrivals}</span>
+                    </Link>
+                    <Link to="/worldcup2026" className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-all rounded-lg">
+                      <span className="text-lg">⚽</span>
+                      <span>{t.navigation.worldCup2026}</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
 
-              {/* Regions Dropdown */}
-              <li className="relative dropdown-container">
-                {(() => {
-                  const { handleMouseEnter, handleMouseLeave } = createHoverHandlers(setIsRegionsOpen)
-                  return (
-                    <div 
-                      className="relative"
-                      onMouseEnter={handleMouseEnter}
-                      onMouseLeave={handleMouseLeave}
-                    >
-                      <button 
-                        className="flex items-center space-x-1 py-2 md:py-4 px-2 text-gray-700 hover:text-blue-600 font-medium transition-colors rounded-md hover:bg-gray-50"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setIsRegionsOpen(!isRegionsOpen)
-                        }}
-                      >
-                        <Globe2 className="h-4 w-4" />
-                        <span>Regions</span>
-                        <ChevronDown className={`h-4 w-4 transition-transform ${isRegionsOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      {isRegionsOpen && (
-                        <div className="absolute left-0 top-full w-96 bg-white rounded-xl shadow-2xl border border-gray-100 py-3 z-50 mt-1 transform transition-all duration-200 ease-out">
-                          <div className="px-5 py-3 border-b border-gray-50">
-                            <h3 className="font-bold text-gray-900 text-lg flex items-center space-x-2">
-                              <span className="text-xl">🌍</span>
-                              <span>Explore by Region</span>
-                            </h3>
-                            <p className="text-xs text-gray-500 mt-1">Discover regional specialties</p>
-                          </div>
-                          <div className="max-h-72 overflow-y-auto">
-                            {regions.length > 0 ? (
-                              regions.map((region) => (
-                                <Link
-                                  key={region.id}
-                                  to={`/region/${region.slug}`}
-                                  className="flex items-center space-x-3 px-5 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 transition-all duration-200 group border-l-4 border-transparent hover:border-blue-400"
-                                  onClick={() => setIsRegionsOpen(false)}
-                                >
-                                  <div className="flex-shrink-0">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center text-white font-bold text-sm group-hover:scale-110 transition-transform">
-                                      {region.name.charAt(0)}
-                                    </div>
-                                  </div>
-                                  <div className="flex-1">
-                                    <span className="font-semibold block">{region.name}</span>
-                                    <span className="text-xs text-gray-500">Traditional treats & flavors</span>
-                                  </div>
-                                  <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 font-bold">→</span>
-                                </Link>
-                              ))
-                            ) : (
-                              <div className="px-5 py-6 text-gray-500 text-center">
-                                <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3"></div>
-                                <span className="text-sm">Loading regions...</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="border-t border-gray-50 mt-2 px-5 py-3">
-                            <Link
-                              to="/regions"
-                              className="flex items-center justify-between text-blue-600 font-semibold hover:text-blue-700 transition-colors group"
-                              onClick={() => setIsRegionsOpen(false)}
-                            >
-                              <span>View All Regions</span>
-                              <span className="group-hover:translate-x-1 transition-transform">→</span>
-                            </Link>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })()}
-              </li>
+              {/* Featured */}
+              <Link
+                to="/featured"
+                className="flex items-center space-x-2 px-4 py-3 text-white hover:bg-white/10 font-medium transition-all rounded-lg group"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Star className="h-4 w-4" />
+                <span>{t.navigation.featured}</span>
+                <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">Hot</span>
+              </Link>
 
-              {/* Countries Dropdown */}
-              <li className="relative dropdown-container">
-                {(() => {
-                  const { handleMouseEnter, handleMouseLeave } = createHoverHandlers(setIsCountriesOpen)
-                  return (
-                    <div 
-                      className="relative"
-                      onMouseEnter={handleMouseEnter}
-                      onMouseLeave={handleMouseLeave}
-                    >
-                      <button 
-                        className="flex items-center space-x-1 py-2 md:py-4 px-2 text-gray-700 hover:text-blue-600 font-medium transition-colors rounded-md hover:bg-gray-50"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setIsCountriesOpen(!isCountriesOpen)
-                        }}
-                      >
-                        <Flag className="h-4 w-4" />
-                        <span>Countries</span>
-                        <ChevronDown className={`h-4 w-4 transition-transform ${isCountriesOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      {isCountriesOpen && (
-                        <div className="absolute left-0 top-full w-96 bg-white rounded-xl shadow-2xl border border-gray-100 py-3 z-50 mt-1 transform transition-all duration-200 ease-out">
-                          <div className="px-5 py-3 border-b border-gray-50">
-                            <h3 className="font-bold text-gray-900 text-lg flex items-center space-x-2">
-                              <span className="text-xl">🏳️</span>
-                              <span>Popular Countries</span>
-                            </h3>
-                            <p className="text-xs text-gray-500 mt-1">Authentic treats from around the world</p>
-                          </div>
-                          <div className="max-h-80 overflow-y-auto">
-                            {countries.length > 0 ? (
-                              <div className="grid grid-cols-2 gap-1 p-2">
-                                {countries.map((country) => (
-                                  <Link
-                                    key={country.id}
-                                    to={`/country/${country.country_code.toLowerCase()}`}
-                                    className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 hover:text-green-700 transition-all duration-200 rounded-lg group border border-transparent hover:border-green-200"
-                                    onClick={() => setIsCountriesOpen(false)}
-                                  >
-                                    <span className="text-2xl group-hover:scale-125 transition-transform">{country.flag_emoji}</span>
-                                    <div className="flex-1 min-w-0">
-                                      <span className="font-medium text-sm block truncate">{country.country_name}</span>
-                                      <span className="text-xs text-gray-500 block">{country.country_code}</span>
-                                    </div>
-                                  </Link>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="px-5 py-6 text-gray-500 text-center">
-                                <div className="animate-spin w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full mx-auto mb-3"></div>
-                                <span className="text-sm">Loading countries...</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="border-t border-gray-50 mt-2 px-5 py-3">
-                            <Link
-                              to="/countries"
-                              className="flex items-center justify-between text-green-600 font-semibold hover:text-green-700 transition-colors group"
-                              onClick={() => setIsCountriesOpen(false)}
-                            >
-                              <span>View All Countries</span>
-                              <span className="group-hover:translate-x-1 transition-transform">→</span>
-                            </Link>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })()}
-              </li>
-              <li>
-                <Link
-                  to="/featured"
-                  className="block py-2 md:py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors text-sm"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Featured
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/new-arrivals"
-                  className="block py-2 md:py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors text-sm"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  New Arrivals
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/about"
-                  className="block py-2 md:py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors text-sm"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/contact"
-                  className="block py-2 md:py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors text-sm"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Contact
-                </Link>
-              </li>
-            </ul>
+              {/* About & Contact */}
+              <Link
+                to="/about"
+                className="px-4 py-3 text-white hover:bg-white/10 font-medium transition-all rounded-lg"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {t.navigation.about}
+              </Link>
+              <Link
+                to="/contact"
+                className="px-4 py-3 text-white hover:bg-white/10 font-medium transition-all rounded-lg"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {t.navigation.contact}
+              </Link>
+            </div>
           </div>
         </div>
-      </nav>
+      )}
     </header>
   )
 }

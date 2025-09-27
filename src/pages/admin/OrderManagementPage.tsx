@@ -76,7 +76,7 @@ export default function OrderManagementPage() {
     setLoading(true)
     
     try {
-      // Fetch orders from Supabase
+      // Fetch orders from Supabase (including Stripe orders)
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('*')

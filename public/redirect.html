@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redirigiendo...</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <script>
+        // Extraer los parámetros de la URL
+        const hash = window.location.hash;
+        const params = new URLSearchParams(hash.substring(1));
+        
+        // Si tenemos un access_token, redirigir a la aplicación principal
+        if (params.get('access_token')) {
+            // Construir la nueva URL en el puerto 80
+            const newUrl = 'http://localhost/' + hash;
+            console.log('Redirigiendo a:', newUrl);
+            window.location.href = newUrl;
+        } else {
+            // Si no hay token, ir a la página principal
+            window.location.href = 'http://localhost/';
+        }
+    </script>
+    <div style="text-align: center; margin-top: 50px;">
+        <h2>Redirigiendo a Sweet Trip...</h2>
+        <p>Si no eres redirigido automáticamente, <a href="http://localhost/">haz clic aquí</a></p>
+    </div>
+</body>
+</html>

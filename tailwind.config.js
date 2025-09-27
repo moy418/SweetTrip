@@ -95,6 +95,22 @@ module.exports = {
             "background-position": "right center",
           },
         },
+        "spin-slow": {
+          "0%": {
+            transform: "rotate(0deg)",
+          },
+          "100%": {
+            transform: "rotate(360deg)",
+          },
+        },
+        "spin-slow-reverse": {
+          "0%": {
+            transform: "rotate(360deg)",
+          },
+          "100%": {
+            transform: "rotate(0deg)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -102,6 +118,8 @@ module.exports = {
         "fade-in-down": "fade-in-down 0.6s ease-out",
         "fade-in-up": "fade-in-up 0.6s ease-out",
         "gradient-x": "gradient-x 3s ease infinite",
+        "spin-slow": "spin-slow 8s linear infinite",
+        "spin-slow-reverse": "spin-slow-reverse 12s linear infinite",
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],

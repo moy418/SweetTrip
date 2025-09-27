@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase, Profile } from '../lib/supabase'
 import toast from 'react-hot-toast'
@@ -9,8 +9,10 @@ interface AuthContextType {
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>
+  signInWithSocial: (provider: 'google' | 'facebook' | 'instagram' | 'tiktok') => Promise<void>
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<Profile>) => Promise<void>
+  createSocialProfile: (user: any) => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -19,6 +21,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const createSocialProfile = useCallback(async (user: any) => {
+    try {
+      console.log('Creating profile for social user:', user.email)
+      
+      // Extract name information from user metadata
+      const fullName = user.user_metadata?.full_name || 
+                      user.user_metadata?.name || 
+                      user.user_metadata?.display_name || ''
+      
+      const firstName = user.user_metadata?.given_name || 
+                       user.user_metadata?.first_name || 
+                       fullName.split(' ')[0] || null
+      
+      const lastName = user.user_metadata?.family_name || 
+                      user.user_metadata?.last_name || 
+                      fullName.split(' ').slice(1).join(' ') || null
+
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email || '',
+          first_name: firstName,
+          last_name: lastName,
+          preferred_currency: 'USD'
+        })
+
+      if (insertError) {
+        console.error('Error creating profile:', insertError)
+        throw insertError
+      }
+
+      console.log('Profile created successfully for:', user.email)
+      return true
+    } catch (error) {
+      console.error('Error in createSocialProfile:', error)
+      throw error
+    }
+  }, [])
 
   // Load user on mount
   useEffect(() => {
@@ -40,10 +82,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email)
         setUser(session?.user || null)
         
         if (session?.user) {
+          // Always try to load the profile first
           await loadUserProfile(session.user.id)
+          
+          // If no profile exists and this is a sign in event, create one
+          if (event === 'SIGNED_IN') {
+            // Check if profile exists after loading
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .maybeSingle()
+
+            if (profileError && profileError.code !== 'PGRST116') {
+              console.error('Error checking profile:', profileError)
+            }
+
+            // If no profile exists, create one for social login users
+            if (!profileData) {
+              try {
+                console.log('Creating profile for new social user:', session.user.email)
+                await createSocialProfile(session.user)
+                // Reload profile after creation
+                await loadUserProfile(session.user.id)
+              } catch (error) {
+                console.error('Error creating profile in auth listener:', error)
+              }
+            }
+          }
         } else {
           setProfile(null)
         }
@@ -51,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [createSocialProfile])
 
   async function loadUserProfile(userId: string) {
     try {
@@ -77,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       throw error
     }
-    toast.success('Welcome back!')
+    toast.success('¡Bienvenido de vuelta a tu Pasaporte Sweet Trip!')
   }
 
   async function signUp(email: string, password: string, firstName: string, lastName: string) {
@@ -109,7 +179,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    toast.success('Account created! Please check your email to verify your account.')
+    toast.success('¡Pasaporte creado! Revisa tu email para verificar tu cuenta.')
+  }
+
+  async function signInWithSocial(provider: 'google' | 'facebook' | 'instagram' | 'tiktok') {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: provider as any,
+      options: {
+        redirectTo: `${window.location.protocol}//${window.location.host}/#/auth/callback`
+      }
+    })
+    
+    if (error) {
+      throw error
+    }
+    
+    toast.success(`¡Iniciando sesión con ${provider}!`)
   }
 
   async function signOut() {
@@ -117,7 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       throw error
     }
-    toast.success('Signed out successfully')
+    toast.success('Sesión cerrada exitosamente')
   }
 
   async function updateProfile(updates: Partial<Profile>) {
@@ -135,7 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setProfile(data)
-    toast.success('Profile updated successfully')
+    toast.success('Perfil actualizado exitosamente')
   }
 
   return (
@@ -145,8 +230,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       signIn,
       signUp,
+      signInWithSocial,
       signOut,
-      updateProfile
+      updateProfile,
+      createSocialProfile
     }}>
       {children}
     </AuthContext.Provider>

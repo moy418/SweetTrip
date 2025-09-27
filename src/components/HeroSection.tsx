@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Globe } from 'lucide-react'
 import LazyImage from './LazyImage'
 import CountdownTimer from './CountdownTimer'
+import { useLanguage } from '../contexts/LanguageContext'
 
 export default function HeroSection() {
+  const { t } = useLanguage()
+  
   return (
     <section className="relative min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-blue-600 text-white overflow-hidden flex items-center pt-24">
       {/* Animated Background Elements - Optimized */}
@@ -28,37 +31,54 @@ export default function HeroSection() {
             {/* Badge */}
             <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 animate-fade-in-down will-change-transform">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium">🌍 50+ Countries • 🍭 1000+ Products</span>
+              <span className="text-sm font-medium">{t.homepage.badge}</span>
             </div>
 
-            {/* Main Headline - More Compact */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight">
-              <span className="block text-white animate-fade-in-down will-change-transform">Discover</span>
-              <span className="block bg-gradient-to-r from-pink-300 via-yellow-300 to-orange-300 bg-clip-text text-transparent animate-gradient-x">
-                Candy
-              </span>
-              <span className="block text-white animate-fade-in-down delay-200 will-change-transform">from</span>
-              <span className="block bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 bg-clip-text text-transparent animate-gradient-x delay-300">
-                Around the World
-              </span>
-            </h1>
+            {/* Prominent Logo */}
+            <div className="flex justify-center lg:justify-start mb-8">
+              <div className="relative group">
+                {/* Glow effect behind logo */}
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-400/40 via-yellow-400/40 to-orange-400/40 rounded-full blur-3xl scale-125 animate-pulse will-change-transform"></div>
+                
+                {/* Main logo */}
+                <img 
+                  src="/sweetlogo-removebg-preview.png" 
+                  alt="Sweet Trip Logo" 
+                  className="relative z-10 h-40 md:h-56 lg:h-72 xl:h-80 w-auto object-contain animate-fade-in-down will-change-transform hover:scale-105 transition-transform duration-500 cursor-pointer"
+                  style={{ backgroundColor: 'transparent' }}
+                />
+                
+                {/* Animated ring around logo */}
+                <div className="absolute inset-0 rounded-full border-4 border-white/30 animate-spin-slow will-change-transform"></div>
+                <div className="absolute inset-2 rounded-full border-2 border-yellow-300/50 animate-spin-slow-reverse will-change-transform"></div>
+              </div>
+            </div>
+
+            {/* Subtitle - Now more prominent since logo is the main focus */}
+            <div className="text-center lg:text-left mb-6">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4 animate-fade-in-up delay-200 will-change-transform">
+                {t.homepage.discoverAdventures}
+              </h2>
+              <p className="text-xl md:text-2xl bg-gradient-to-r from-pink-300 via-yellow-300 to-orange-300 bg-clip-text text-transparent font-bold animate-gradient-x delay-300 will-change-transform">
+                {t.homepage.fromAroundWorld}
+              </p>
+            </div>
 
             {/* Subtitle - More Compact */}
             <p className="text-lg md:text-xl text-white/90 leading-relaxed max-w-xl animate-fade-in-up delay-400 will-change-transform">
-              Embark on a <span className="font-bold text-yellow-300">sweet adventure</span> and discover exotic flavors, 
-              unique treats, and authentic candies from every corner of the globe.
+              {t.homepage.description}
             </p>
             
             {/* Compelling CTA Text with Psychological Triggers */}
             <div className="text-center lg:text-left animate-fade-in-up delay-500 will-change-transform">
               {/* Urgency & Scarcity */}
               <div className="inline-flex items-center space-x-2 bg-red-500/20 backdrop-blur-sm border border-red-400/30 rounded-full px-4 py-2 mb-4 animate-pulse">
-                <span className="text-red-300 text-sm font-bold">⚡ LIMITED TIME</span>
-                <span className="text-yellow-300 text-sm">Free shipping on orders $60+</span>
+                <span className="text-red-300 text-sm font-bold">{t.homepage.limitedTime}</span>
+                <span className="text-yellow-300 text-sm">{t.homepage.freeShipping}</span>
               </div>
               
               <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                Ready to <span className="text-yellow-300">explore</span>?
+                {t.homepage.readyToExplore}
               </h3>
               <p className="text-lg text-white/80 mb-4">
                 Choose your adventure and start discovering amazing treats!

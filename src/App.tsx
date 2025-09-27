@@ -2,11 +2,13 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './contexts/AuthContext'
+import { LanguageProvider } from './contexts/LanguageContext'
 import Layout from './components/Layout'
 
 // Pages
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
+import PassportOfficePage from './pages/PassportOfficePage'
 import RegisterPage from './pages/RegisterPage'
 import ProductListPage from './pages/ProductListPage'
 import ProductDetailPage from './pages/ProductDetailPage'
@@ -24,6 +26,7 @@ import OrderManagementPage from './pages/admin/OrderManagementPage'
 import VideoManagementPage from './pages/admin/VideoManagementPage'
 import AdminRoute from './components/AdminRoute'
 import NotFoundPage from './pages/NotFoundPage'
+import AuthCallbackPage from './pages/AuthCallbackPage'
 
 // New Navigation Pages
 import CategoriesPage from './pages/CategoriesPage'
@@ -31,6 +34,12 @@ import RegionsPage from './pages/RegionsPage'
 import CountriesListPage from './pages/CountriesListPage'
 import AboutPage from './pages/AboutPage'
 import ContactPage from './pages/ContactPage'
+
+// Legal Pages
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import TermsOfServicePage from './pages/TermsOfServicePage'
+import ShippingInfoPage from './pages/ShippingInfoPage'
+import ReturnsPage from './pages/ReturnsPage'
 
 // World Cup 2026 Pages
 import WorldCup2026Page from './pages/WorldCup2026Page'
@@ -53,12 +62,14 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<LoginPage />} />
+      <LanguageProvider>
+        <AuthProvider>
+          <Router>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/passport-office" element={<PassportOfficePage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/products" element={<ProductListPage />} />
               <Route path="/product/:slug" element={<ProductDetailPage />} />
@@ -82,7 +93,16 @@ function App() {
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
               
+              {/* Legal Pages */}
+              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+              <Route path="/shipping" element={<ShippingInfoPage />} />
+              <Route path="/shipping-info" element={<ShippingInfoPage />} />
+              <Route path="/returns" element={<ReturnsPage />} />
+              
               {/* World Cup 2026 Routes */}
+              {/* Auth Callback */}
+              <Route path="/auth/callback" element={<AuthCallbackPage />} />
               <Route path="/worldcup2026" element={<WorldCup2026Page />} />
               <Route path="/worldcup2026/countries" element={<CountriesPage />} />
               <Route path="/worldcup2026/predictions" element={<PredictionsPage />} />
@@ -115,9 +135,10 @@ function App() {
               } />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
-          </Layout>
-        </Router>
-      </AuthProvider>
+            </Layout>
+          </Router>
+        </AuthProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   )
 }
