@@ -217,7 +217,7 @@ export default function Header() {
                       }}
                     >
                       <Target className="h-5 w-5 animate-pulse" />
-                      <span>{t.navigation.categories}</span>
+                      <span>All Products</span>
                       <ChevronDown className={`h-5 w-5 animate-pulse transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isCategoriesOpen && (
@@ -298,11 +298,11 @@ export default function Header() {
 
                         <div className="border-t border-gray-50 mt-2 px-6 py-3">
                           <Link
-                            to="/categories"
+                            to="/products"
                             className="flex items-center justify-between text-blue-600 font-semibold hover:text-blue-700 transition-colors group"
                             onClick={() => setIsCategoriesOpen(false)}
                           >
-                            <span>View All Categories</span>
+                            <span>View All Products</span>
                             <span className="group-hover:translate-x-1 transition-transform">→</span>
                           </Link>
                         </div>
@@ -320,7 +320,7 @@ export default function Header() {
               onClick={() => setIsMenuOpen(false)}
             >
               <Star className="h-5 w-5 animate-pulse" />
-              <span>text-lg">{t.navigation.featured}</span>
+              <span className="text-lg">{t.navigation.featured}</span>
               <span className="bg-white text-orange-600 px-3 py-1 rounded-full text-xs font-black animate-bounce">🔥 HOT</span>
             </Link>
 
@@ -517,7 +517,7 @@ export default function Header() {
                 >
                   <div className="flex items-center space-x-2">
                     <Target className="h-5 w-5 animate-pulse" />
-                    <span>{t.navigation.categories}</span>
+                    <span>All Products</span>
                   </div>
                   <ChevronDown className={`h-5 w-5 animate-pulse transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -550,7 +550,7 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 <Star className="h-5 w-5 animate-pulse" />
-                <span>text-lg">{t.navigation.featured}</span>
+                <span className="text-lg">{t.navigation.featured}</span>
                 <span className="bg-white text-orange-600 px-3 py-1 rounded-full text-xs font-black animate-bounce">🔥 HOT</span>
               </Link>
 
