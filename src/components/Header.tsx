@@ -191,7 +191,7 @@ export default function Header() {
                   type="submit"
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600"
                 >
-                  <Search className={`transition-all duration-300 ${isScrolled ? 'h-4 w-4' : 'h-4 w-4'}`} />
+                  <Search className={`transition-all duration-300 ${isScrolled ? 'h-5 w-5 animate-pulse' : 'h-5 w-5 animate-pulse'}`} />
                 </button>
               </div>
             </form>
@@ -210,15 +210,15 @@ export default function Header() {
                     onMouseLeave={handleMouseLeave}
                   >
                     <button 
-                      className="flex items-center space-x-2 px-4 py-2 text-white hover:text-blue-300 font-medium transition-all rounded-lg hover:bg-white/10 group backdrop-blur-sm"
+                      className="flex items-center space-x-2 px-6 py-3 text-white font-bold transition-all rounded-xl hover:scale-105 group backdrop-blur-sm bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg hover:shadow-xl"
                       onClick={(e) => {
                         e.stopPropagation()
                         setIsCategoriesOpen(!isCategoriesOpen)
                       }}
                     >
-                      <Target className="h-4 w-4" />
+                      <Target className="h-5 w-5 animate-pulse" />
                       <span>{t.navigation.categories}</span>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`h-5 w-5 animate-pulse transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isCategoriesOpen && (
                       <div className="absolute left-0 top-full w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 py-4 z-50 mt-2 transform transition-all duration-300 ease-out">
@@ -313,15 +313,15 @@ export default function Header() {
               })()}
             </div>
 
-            {/* Featured - Prominent Button */}
+            {/* Featured - Super Prominent Button */}
             <Link
               to="/featured"
-              className="flex items-center space-x-2 px-4 py-2 text-white hover:text-blue-300 font-medium transition-all rounded-lg hover:bg-white/10 group backdrop-blur-sm"
+              className="flex items-center space-x-2 px-6 py-3 text-white font-bold transition-all rounded-xl hover:scale-105 group backdrop-blur-sm bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg hover:shadow-xl"
               onClick={() => setIsMenuOpen(false)}
             >
-              <Star className="h-4 w-4" />
-              <span>{t.navigation.featured}</span>
-              <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">Hot</span>
+              <Star className="h-5 w-5 animate-pulse" />
+              <span>text-lg">{t.navigation.featured}</span>
+              <span className="bg-white text-orange-600 px-3 py-1 rounded-full text-xs font-black animate-bounce">🔥 HOT</span>
             </Link>
 
             {/* About & Contact - Clean Links */}
@@ -382,7 +382,7 @@ export default function Header() {
               <ShoppingCart className={`transition-all duration-300 ${isScrolled ? 'h-5 w-5' : 'h-5 w-5'}`} />
               {getTotalItems() > 0 && (
                 <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full flex items-center justify-center transition-all duration-300 ${
-                  isScrolled ? 'h-4 w-4 text-xs' : 'h-5 w-5'
+                  isScrolled ? 'h-5 w-5 animate-pulse text-xs' : 'h-5 w-5'
                 }`}>
                   {getTotalItems()}
                 </span>
@@ -516,10 +516,10 @@ export default function Header() {
                   }}
                 >
                   <div className="flex items-center space-x-2">
-                    <Target className="h-4 w-4" />
+                    <Target className="h-5 w-5 animate-pulse" />
                     <span>{t.navigation.categories}</span>
                   </div>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`h-5 w-5 animate-pulse transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isCategoriesOpen && (
                   <div className="mt-2 bg-gray-800 rounded-lg p-3 space-y-2">
@@ -549,9 +549,9 @@ export default function Header() {
                 className="flex items-center space-x-2 px-4 py-3 text-white hover:bg-white/10 font-medium transition-all rounded-lg group"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <Star className="h-4 w-4" />
-                <span>{t.navigation.featured}</span>
-                <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">Hot</span>
+                <Star className="h-5 w-5 animate-pulse" />
+                <span>text-lg">{t.navigation.featured}</span>
+                <span className="bg-white text-orange-600 px-3 py-1 rounded-full text-xs font-black animate-bounce">🔥 HOT</span>
               </Link>
 
               {/* About & Contact */}
